@@ -54,9 +54,27 @@ var _ unsafe.Pointer
 		fmt.Fprintf(out, "type %s %s\n\n", name, def)
 	}
 
-	// TODO: Globals
+	for _, g := range m.Globals {
+		if g.Init == nil {
+			// Just a declaration; skip it.
+			continue
+		}
+		t, err := TypeSpec(g.ContentType)
+		if err != nil {
+			log.Fatalf("Error translating type (%v): %v", g.ContentType, err)
+		}
+		val, err := FormatValue(g.Init)
+		if err != nil {
+			log.Fatalf("Error translating initializer (%v): %v", g.Init, err)
+		}
+		fmt.Fprintf(out, "var %s %s = %s\n\n", VariableName(g), t, val)
+	}
 
 	for _, f := range m.Funcs {
+		if f.Blocks == nil {
+			// Just a declaration, not a definition; skip it.
+			continue
+		}
 		fmt.Fprintf(out, "func %s(", f.Name())
 		for i, p := range f.Params {
 			if i > 0 {
@@ -84,6 +102,9 @@ var _ unsafe.Pointer
 		for _, b := range f.Blocks {
 			for _, inst := range b.Insts {
 				if inst, ok := inst.(value.Named); ok {
+					if types.Equal(inst.Type(), types.Void) {
+						continue
+					}
 					t, err := TypeSpec(inst.Type())
 					if err != nil {
 						log.Fatalf("Error translating type of %s in %s: %v", inst.Ident(), f.Name(), err)
@@ -117,7 +138,9 @@ var _ unsafe.Pointer
 				if err != nil {
 					log.Fatalf("Error translating %q: %v", inst.Def(), err)
 				}
-				fmt.Fprintf(out, "\t%s\n", translated)
+				if translated != "" {
+					fmt.Fprintf(out, "\t%s\n", translated)
+				}
 			}
 			switch term := b.Term.(type) {
 			case *ir.TermBr:
@@ -170,6 +193,38 @@ var _ unsafe.Pointer
 					log.Fatalf("Error translating return value (%v): %v", term.X, err)
 				}
 				fmt.Fprintf(out, "\treturn %s\n", retVal)
+
+			case *ir.TermSwitch:
+				x, err := FormatValue(term.X)
+				if err != nil {
+					log.Fatalf("Error translating control value (%v): %v", term.X, err)
+				}
+				fmt.Fprintf(out, "\tswitch %s {\n", x)
+				for _, c := range term.Cases {
+					x, err := FormatValue(c.X)
+					if err != nil {
+						log.Fatalf("Error translating case value (%v): %v", c.X, err)
+					}
+					fmt.Fprintf(out, "\tcase %s:\n", x)
+					phis, err := PhiAssignments(b, c.Target)
+					if err != nil {
+						log.Fatalf("Error translating phi nodes: %v", err)
+					}
+					if phis != "" {
+						fmt.Fprintf(out, "\t\t%s\n", phis)
+					}
+					fmt.Fprintf(out, "\t\tgoto block%d\n", c.Target.LocalID)
+				}
+				fmt.Fprint(out, "\tdefault:\n")
+				phis, err := PhiAssignments(b, term.TargetDefault)
+				if err != nil {
+					log.Fatalf("Error translating phi nodes: %v", err)
+				}
+				if phis != "" {
+					fmt.Fprintf(out, "\t\t%s\n", phis)
+				}
+				fmt.Fprintf(out, "\t\tgoto block%d\n", term.TargetDefault.LocalID)
+				fmt.Fprint(out, "\t}\n")
 
 			default:
 				log.Fatalf("Unsupported block terminator type: %T", term)

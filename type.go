@@ -10,6 +10,13 @@ import (
 // TypeDefinition returns the definition (not just the name) of t.
 func TypeDefinition(t types.Type) (string, error) {
 	switch t := t.(type) {
+	case *types.ArrayType:
+		elemType, err := TypeSpec(t.ElemType)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("[%d]%s", t.Len, elemType), nil
+
 	case *types.IntType:
 		switch t.BitSize {
 		case 1:

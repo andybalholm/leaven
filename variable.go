@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
+	"github.com/llir/llvm/ir"
 	"github.com/llir/llvm/ir/constant"
 	"github.com/llir/llvm/ir/types"
 	"github.com/llir/llvm/ir/value"
@@ -25,6 +27,42 @@ func FormatValue(v value.Value) (string, error) {
 
 	case *constant.Int:
 		return v.X.String(), nil
+
+	case *ir.Arg:
+		return FormatValue(v.Value)
+
+	case *constant.CharArray:
+		t, err := TypeSpec(v.Typ)
+		if err != nil {
+			return "", fmt.Errorf("error translating type (%v): %v", v.Type, err)
+		}
+		b := new(bytes.Buffer)
+		if len(v.X) < 16 {
+			b.WriteString(t)
+			b.WriteByte('{')
+			for i, c := range v.X {
+				if i > 0 {
+					b.WriteString(", ")
+				}
+				fmt.Fprintf(b, "%d", c)
+			}
+			b.WriteByte('}')
+		} else {
+			b.WriteString(t)
+			b.WriteString("{\n\t")
+			for i, c := range v.X {
+				if i > 0 {
+					if i%16 == 0 {
+						b.WriteString(",\n\t")
+					} else {
+						b.WriteString(", ")
+					}
+				}
+				fmt.Fprintf(b, "%d", c)
+			}
+			b.WriteString(",\n}")
+		}
+		return b.String(), nil
 
 	default:
 		return "", fmt.Errorf("unsupported type of value to translate: %T", v)

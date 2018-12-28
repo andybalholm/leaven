@@ -33,7 +33,7 @@ func FormatValue(v value.Value) (string, error) {
 	case *constant.Array:
 		t, err := TypeSpec(v.Typ)
 		if err != nil {
-			return "", fmt.Errorf("error translating type (%v): %v", v.Type, err)
+			return "", fmt.Errorf("error translating type (%v): %v", v.Typ, err)
 		}
 		b := new(bytes.Buffer)
 		if len(v.Elems) < 16 {
@@ -74,7 +74,7 @@ func FormatValue(v value.Value) (string, error) {
 	case *constant.CharArray:
 		t, err := TypeSpec(v.Typ)
 		if err != nil {
-			return "", fmt.Errorf("error translating type (%v): %v", v.Type, err)
+			return "", fmt.Errorf("error translating type (%v): %v", v.Typ, err)
 		}
 		b := new(bytes.Buffer)
 		if len(v.X) < 16 {
@@ -104,6 +104,13 @@ func FormatValue(v value.Value) (string, error) {
 		}
 		return b.String(), nil
 
+	case *constant.ExprGetElementPtr:
+		indices := make([]value.Value, len(v.Indices))
+		for i, index := range v.Indices {
+			indices[i] = index.Index
+		}
+		return GetElementPtr(v.ElemType, v.Src, indices)
+
 	case *constant.Float:
 		if v.NaN {
 			return "", errors.New("not supported: NaN float constant")
@@ -112,6 +119,34 @@ func FormatValue(v value.Value) (string, error) {
 
 	case *constant.Int:
 		return v.X.String(), nil
+
+	case *constant.Struct:
+		t, err := TypeSpec(v.Typ)
+		if err != nil {
+			return "", fmt.Errorf("error translating type (%v): %v", v.Typ, err)
+		}
+		b := new(bytes.Buffer)
+		b.WriteString(t)
+		b.WriteByte('{')
+		for i, c := range v.Fields {
+			if i > 0 {
+				b.WriteString(", ")
+			}
+			e, err := FormatValue(c)
+			if err != nil {
+				return "", fmt.Errorf("error translating field %d (%v): %v", i, c, err)
+			}
+			fmt.Fprint(b, e)
+		}
+		b.WriteByte('}')
+		return b.String(), nil
+
+	case *constant.ZeroInitializer:
+		t, err := TypeSpec(v.Typ)
+		if err != nil {
+			return "", fmt.Errorf("error translating type (%v): %v", v.Typ, err)
+		}
+		return t + "{}", nil
 
 	default:
 		return "", fmt.Errorf("unsupported type of value to translate: %T", v)

@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/llir/llvm/ir"
-	"github.com/llir/llvm/ir/constant"
 	"github.com/llir/llvm/ir/enum"
 	"github.com/llir/llvm/ir/types"
 )
@@ -87,83 +86,11 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		return fmt.Sprintf("%s = %s(%s)", VariableName(inst), callee, strings.Join(args, ", ")), nil
 
 	case *ir.InstGetElementPtr:
-		srcPointerType, ok := inst.Src.Type().(*types.PointerType)
-		if !ok {
-			return "", fmt.Errorf("non-pointer source parameter: %v", inst.Src.Type())
-		}
-		if !types.Equal(srcPointerType.ElemType, inst.ElemType) {
-			return "", fmt.Errorf("mismatched source and element types")
-		}
-
-		zeroFirstIndex := false
-		positiveFirstIndex := false
-		if firstIndex, ok := inst.Indices[0].(*constant.Int); ok {
-			switch firstIndex.X.Sign() {
-			case 0:
-				zeroFirstIndex = true
-			case 1:
-				positiveFirstIndex = true
-			}
-		}
-		takeAddress := false
-
-		source, err := FormatValue(inst.Src)
+		result, err := GetElementPtr(inst.ElemType, inst.Src, inst.Indices)
 		if err != nil {
-			return "", fmt.Errorf("error translating source pointer (%q): %v", inst.Src, err)
+			return "", err
 		}
-		result := source
-
-		if !zeroFirstIndex {
-			firstIndex, err := FormatValue(inst.Indices[0])
-			if err != nil {
-				return "", fmt.Errorf("error translating first index (%v): %v", inst.Indices[0], err)
-			}
-			elemType, err := TypeSpec(inst.ElemType)
-			if err != nil {
-				return "", fmt.Errorf("error translating element type (%v): %v", inst.ElemType, err)
-			}
-			offset := fmt.Sprintf("uintptr(int64(%s)) * unsafe.Sizeof(*(*%s)(nil))", firstIndex, elemType)
-			if positiveFirstIndex {
-				offset = fmt.Sprintf("%s * unsafe.Sizeof(*(*%s)(nil))", firstIndex, elemType)
-			}
-			result = fmt.Sprintf("uintptr(unsafe.Pointer(%s)) + %s", source, offset)
-			result = fmt.Sprintf("(*%s)(unsafe.Pointer(%s))", elemType, result)
-		}
-
-		currentType := inst.ElemType
-
-		for _, index := range inst.Indices[1:] {
-			switch ct := currentType.(type) {
-			case *types.ArrayType:
-				v, err := FormatValue(index)
-				if err != nil {
-					return "", fmt.Errorf("error translating index (%v): %v", index, err)
-				}
-				result = fmt.Sprintf("%s[%s]", result, v)
-				currentType = ct.ElemType
-				takeAddress = true
-
-			case *types.StructType:
-				ci, ok := index.(*constant.Int)
-				if !ok {
-					return "", fmt.Errorf("non-constant index into struct: %v", index)
-				}
-				result = fmt.Sprintf("%s.f%v", result, ci.X)
-				currentType = ct.Fields[ci.X.Int64()]
-				takeAddress = true
-
-			default:
-				return "", fmt.Errorf("unsupported type to index into: %v", currentType)
-			}
-		}
-
-		if takeAddress {
-			result = fmt.Sprintf("%s = &%s", VariableName(inst), result)
-		} else {
-			result = fmt.Sprintf("%s = %s", VariableName(inst), result)
-		}
-
-		return result, nil
+		return fmt.Sprintf("%s = %s", VariableName(inst), result), nil
 
 	case *ir.InstICmp:
 		var op string

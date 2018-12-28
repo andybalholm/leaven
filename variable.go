@@ -34,6 +34,47 @@ func FormatValue(v value.Value) (string, error) {
 	case *ir.Arg:
 		return FormatValue(v.Value)
 
+	case *constant.Array:
+		t, err := TypeSpec(v.Typ)
+		if err != nil {
+			return "", fmt.Errorf("error translating type (%v): %v", v.Type, err)
+		}
+		b := new(bytes.Buffer)
+		if len(v.Elems) < 16 {
+			b.WriteString(t)
+			b.WriteByte('{')
+			for i, c := range v.Elems {
+				if i > 0 {
+					b.WriteString(", ")
+				}
+				e, err := FormatValue(c)
+				if err != nil {
+					return "", fmt.Errorf("error translating element %d (%v): %v", i, c, err)
+				}
+				fmt.Fprint(b, e)
+			}
+			b.WriteByte('}')
+		} else {
+			b.WriteString(t)
+			b.WriteString("{\n\t")
+			for i, c := range v.Elems {
+				if i > 0 {
+					if i%16 == 0 {
+						b.WriteString(",\n\t")
+					} else {
+						b.WriteString(", ")
+					}
+				}
+				e, err := FormatValue(c)
+				if err != nil {
+					return "", fmt.Errorf("error translating element %d (%v): %v", i, c, err)
+				}
+				fmt.Fprint(b, e)
+			}
+			b.WriteString(",\n}")
+		}
+		return b.String(), nil
+
 	case *constant.CharArray:
 		t, err := TypeSpec(v.Typ)
 		if err != nil {

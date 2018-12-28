@@ -40,6 +40,9 @@ var _ unsafe.Pointer
 
 	for i, t := range m.TypeDefs {
 		name := t.Name()
+		if name == "union.anon" {
+			continue
+		}
 		if name == "" {
 			name = fmt.Sprintf("type%d", i)
 		}

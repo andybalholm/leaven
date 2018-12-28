@@ -94,6 +94,9 @@ func TypeDefinition(t types.Type) (string, error) {
 // TypeSpec returns the name (if it has one) or the definition of t.
 func TypeSpec(t types.Type) (string, error) {
 	if name := t.Name(); name != "" {
+		if name == "union.anon" {
+			return TypeDefinition(t)
+		}
 		name = strings.TrimPrefix(name, "struct.")
 		name = strings.TrimPrefix(name, "union.")
 		return name, nil

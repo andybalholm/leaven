@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"strings"
 
 	"github.com/llir/llvm/ir/types"
 )
@@ -17,6 +18,30 @@ func TypeDefinition(t types.Type) (string, error) {
 		}
 		return fmt.Sprintf("[%d]%s", t.Len, elemType), nil
 
+	case *types.FuncType:
+		b := new(bytes.Buffer)
+		b.WriteString("func(")
+		for i, p := range t.Params {
+			if i != 0 {
+				b.WriteString(", ")
+			}
+			pt, err := TypeSpec(p)
+			if err != nil {
+				return "", fmt.Errorf("error converting type of parameter %d (%v): %v", i, p, err)
+			}
+			b.WriteString(pt)
+		}
+		b.WriteString(")")
+		if !types.Equal(t.RetType, types.Void) {
+			b.WriteString(" ")
+			rt, err := TypeSpec(t.RetType)
+			if err != nil {
+				return "", fmt.Errorf("error converting return type (%v): %v", t.RetType, err)
+			}
+			b.WriteString(rt)
+		}
+		return b.String(), nil
+
 	case *types.IntType:
 		switch t.BitSize {
 		case 1:
@@ -28,6 +53,10 @@ func TypeDefinition(t types.Type) (string, error) {
 		}
 
 	case *types.PointerType:
+		if _, ok := t.ElemType.(*types.FuncType); ok {
+			// Translate a C function pointer type as a Go function type.
+			return TypeDefinition(t.ElemType)
+		}
 		elemType, err := TypeSpec(t.ElemType)
 		if err != nil {
 			return "", err
@@ -55,6 +84,8 @@ func TypeDefinition(t types.Type) (string, error) {
 // TypeSpec returns the name (if it has one) or the definition of t.
 func TypeSpec(t types.Type) (string, error) {
 	if name := t.Name(); name != "" {
+		name = strings.TrimPrefix(name, "struct.")
+		name = strings.TrimPrefix(name, "union.")
 		return name, nil
 	}
 	return TypeDefinition(t)

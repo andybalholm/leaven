@@ -44,6 +44,7 @@ var _ unsafe.Pointer
 			name = fmt.Sprintf("type%d", i)
 		}
 		name = strings.TrimPrefix(name, "struct.")
+		name = strings.TrimPrefix(name, "union.")
 		t.SetName(name)
 
 		def, err := TypeDefinition(t)

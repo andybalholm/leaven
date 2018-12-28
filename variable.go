@@ -14,6 +14,9 @@ import (
 // VariableName returns the name to use for a local variable or parameter.
 func VariableName(v value.Named) string {
 	if name := v.Name(); name != "" {
+		if strings.HasPrefix(name, ".") {
+			name = strings.Replace(name, ".", "", 2)
+		}
 		return name
 	}
 	return "v" + strings.TrimPrefix(v.Ident(), "%")

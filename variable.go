@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -25,9 +26,6 @@ func FormatValue(v value.Value) (string, error) {
 	switch v := v.(type) {
 	case value.Named:
 		return VariableName(v), nil
-
-	case *constant.Int:
-		return v.X.String(), nil
 
 	case *ir.Arg:
 		return FormatValue(v.Value)
@@ -105,6 +103,15 @@ func FormatValue(v value.Value) (string, error) {
 			b.WriteString(",\n}")
 		}
 		return b.String(), nil
+
+	case *constant.Float:
+		if v.NaN {
+			return "", errors.New("not supported: NaN float constant")
+		}
+		return v.X.String(), nil
+
+	case *constant.Int:
+		return v.X.String(), nil
 
 	default:
 		return "", fmt.Errorf("unsupported type of value to translate: %T", v)

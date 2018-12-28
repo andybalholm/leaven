@@ -230,6 +230,17 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		return fmt.Sprintf("%s = %s << %s", VariableName(inst), x, y), nil
 
+	case *ir.InstSIToFP:
+		from, err := FormatSigned(inst.From)
+		if err != nil {
+			return "", fmt.Errorf("error translating source (%v): %v", inst.From, err)
+		}
+		to, err := TypeSpec(inst.To)
+		if err != nil {
+			return "", fmt.Errorf("error translating type (%v): %v", inst.To, err)
+		}
+		return fmt.Sprintf("%s = %s(%s)", VariableName(inst), to, from), nil
+
 	case *ir.InstStore:
 		dest, err := FormatValue(inst.Dst)
 		if err != nil {

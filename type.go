@@ -22,7 +22,7 @@ func TypeDefinition(t types.Type) (string, error) {
 		switch t.Kind {
 		case types.FloatKindFloat:
 			return "float32", nil
-		case types.FloatKindDouble:
+		case types.FloatKindDouble, types.FloatKindX86FP80:
 			return "float64", nil
 		default:
 			return "", fmt.Errorf("unsupported floating-point type: %v", t.Kind)

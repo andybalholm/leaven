@@ -18,6 +18,16 @@ func TypeDefinition(t types.Type) (string, error) {
 		}
 		return fmt.Sprintf("[%d]%s", t.Len, elemType), nil
 
+	case *types.FloatType:
+		switch t.Kind {
+		case types.FloatKindFloat:
+			return "float32", nil
+		case types.FloatKindDouble:
+			return "float64", nil
+		default:
+			return "", fmt.Errorf("unsupported floating-point type: %v", t.Kind)
+		}
+
 	case *types.FuncType:
 		b := new(bytes.Buffer)
 		b.WriteString("func(")

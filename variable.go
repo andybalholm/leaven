@@ -186,6 +186,27 @@ func FormatValue(v value.Value) (string, error) {
 		b.WriteByte('}')
 		return b.String(), nil
 
+	case *constant.Vector:
+		t, err := TypeSpec(v.Typ)
+		if err != nil {
+			return "", fmt.Errorf("error translating type (%v): %v", v.Typ, err)
+		}
+		b := new(bytes.Buffer)
+		b.WriteString(t)
+		b.WriteByte('{')
+		for i, c := range v.Elems {
+			if i > 0 {
+				b.WriteString(", ")
+			}
+			e, err := FormatValue(c)
+			if err != nil {
+				return "", fmt.Errorf("error translating element %d (%v): %v", i, c, err)
+			}
+			fmt.Fprint(b, e)
+		}
+		b.WriteByte('}')
+		return b.String(), nil
+
 	case *constant.ZeroInitializer:
 		t, err := TypeSpec(v.Typ)
 		if err != nil {

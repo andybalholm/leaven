@@ -86,6 +86,13 @@ func TypeDefinition(t types.Type) (string, error) {
 		b.WriteString("}")
 		return b.String(), nil
 
+	case *types.VectorType:
+		elemType, err := TypeSpec(t.ElemType)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("[%d]%s", t.Len, elemType), nil
+
 	default:
 		return "", fmt.Errorf("unsupported type %T", t)
 	}

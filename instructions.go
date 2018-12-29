@@ -46,6 +46,9 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
 		}
+		if intType, ok := inst.Typ.(*types.IntType); ok && intType.BitSize == 1 {
+			return fmt.Sprintf("%s = %s && %s", VariableName(inst), x, y), nil
+		}
 		return fmt.Sprintf("%s = %s & %s", VariableName(inst), x, y), nil
 
 	case *ir.InstBitCast:
@@ -318,6 +321,9 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		y, err := FormatValue(inst.Y)
 		if err != nil {
 			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+		}
+		if intType, ok := inst.Typ.(*types.IntType); ok && intType.BitSize == 1 {
+			return fmt.Sprintf("%s = %s || %s", VariableName(inst), x, y), nil
 		}
 		return fmt.Sprintf("%s = %s | %s", VariableName(inst), x, y), nil
 

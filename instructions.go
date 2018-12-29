@@ -131,6 +131,17 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		return fmt.Sprintf("%s = %s / %s", VariableName(inst), x, y), nil
 
+	case *ir.InstFMul:
+		x, err := FormatValue(inst.X)
+		if err != nil {
+			return "", fmt.Errorf("error translating left operand (%v): %v", inst.X, err)
+		}
+		y, err := FormatValue(inst.Y)
+		if err != nil {
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+		}
+		return fmt.Sprintf("%s = %s * %s", VariableName(inst), x, y), nil
+
 	case *ir.InstFPExt:
 		from, err := FormatValue(inst.From)
 		if err != nil {

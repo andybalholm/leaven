@@ -142,6 +142,20 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		return fmt.Sprintf("%s = %s(%s)", VariableName(inst), to, from), nil
 
+	case *ir.InstFPToSI:
+		from, err := FormatValue(inst.From)
+		if err != nil {
+			return "", fmt.Errorf("error translating source (%v): %v", inst.From, err)
+		}
+		to, err := TypeSpec(inst.To)
+		if err != nil {
+			return "", fmt.Errorf("error translating type (%v): %v", inst.To, err)
+		}
+		if to == "byte" {
+			return fmt.Sprintf("%s = byte(int8(%s))", VariableName(inst), from), nil
+		}
+		return fmt.Sprintf("%s = %s(%s)", VariableName(inst), to, from), nil
+
 	case *ir.InstFPTrunc:
 		from, err := FormatValue(inst.From)
 		if err != nil {

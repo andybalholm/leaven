@@ -106,6 +106,8 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			if len(args) == 1 {
 				return fmt.Sprintf("%s = (*byte)(noarch.Malloc(int32(%s)))", VariableName(inst), args[0]), nil
 			}
+		case "memset_pattern16":
+			callee = "libc.MemsetPattern16"
 		case "printf":
 			callee = "noarch.Printf"
 		case "putchar":

@@ -116,6 +116,17 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		return fmt.Sprintf("%s = %s %s %s", VariableName(inst), x, op, y), nil
 
+	case *ir.InstFDiv:
+		x, err := FormatValue(inst.X)
+		if err != nil {
+			return "", fmt.Errorf("error translating left operand (%v): %v", inst.X, err)
+		}
+		y, err := FormatValue(inst.Y)
+		if err != nil {
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+		}
+		return fmt.Sprintf("%s = %s / %s", VariableName(inst), x, y), nil
+
 	case *ir.InstFPExt:
 		from, err := FormatValue(inst.From)
 		if err != nil {
@@ -137,6 +148,17 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			return "", fmt.Errorf("error translating type (%v): %v", inst.To, err)
 		}
 		return fmt.Sprintf("%s = %s(%s)", VariableName(inst), to, from), nil
+
+	case *ir.InstFSub:
+		x, err := FormatValue(inst.X)
+		if err != nil {
+			return "", fmt.Errorf("error translating left operand (%v): %v", inst.X, err)
+		}
+		y, err := FormatValue(inst.Y)
+		if err != nil {
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+		}
+		return fmt.Sprintf("%s = %s - %s", VariableName(inst), x, y), nil
 
 	case *ir.InstGetElementPtr:
 		result, err := GetElementPtr(inst.ElemType, inst.Src, inst.Indices)

@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -113,7 +112,14 @@ func FormatValue(v value.Value) (string, error) {
 
 	case *constant.Float:
 		if v.NaN {
-			return "", errors.New("not supported: NaN float constant")
+			return "math.NaN()", nil
+		}
+		result := v.X.String()
+		switch result {
+		case "+Inf":
+			return "math.Inf(1)", nil
+		case "-Inf":
+			return "math.Inf(-1)", nil
 		}
 		return v.X.String(), nil
 

@@ -85,6 +85,35 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		return fmt.Sprintf("%s = %s(%s)", VariableName(inst), callee, strings.Join(args, ", ")), nil
 
+	case *ir.InstFCmp:
+		var op string
+		switch inst.Pred {
+		case enum.FPredOEQ:
+			op = "=="
+		case enum.FPredOGE:
+			op = ">="
+		case enum.FPredOGT:
+			op = ">"
+		case enum.FPredOLE:
+			op = "<="
+		case enum.FPredOLT:
+			op = "<"
+		case enum.FPredUNE:
+			op = "!="
+		default:
+			return "", fmt.Errorf("unsupported comparison predicate: %v", inst.Pred)
+		}
+
+		x, err := FormatValue(inst.X)
+		if err != nil {
+			return "", fmt.Errorf("error translating left operand (%v): %v", inst.X, err)
+		}
+		y, err := FormatValue(inst.Y)
+		if err != nil {
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+		}
+		return fmt.Sprintf("%s = %s %s %s", VariableName(inst), x, op, y), nil
+
 	case *ir.InstFPTrunc:
 		from, err := FormatValue(inst.From)
 		if err != nil {

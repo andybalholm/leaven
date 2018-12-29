@@ -146,7 +146,15 @@ func FormatValue(v value.Value) (string, error) {
 		return FormatValue(v.Constant)
 
 	case *constant.Int:
-		return v.X.String(), nil
+		result := v.X.String()
+		if v.Typ.BitSize == 1 {
+			if result == "1" {
+				result = "true"
+			} else {
+				result = "false"
+			}
+		}
+		return result, nil
 
 	case *constant.Null:
 		return "nil", nil

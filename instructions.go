@@ -323,6 +323,9 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error translating source (%v): %v", inst.From, err)
 		}
+		if fromType, ok := inst.From.Type().(*types.IntType); ok && fromType.BitSize == 1 {
+			return fmt.Sprintf("if %s { %s = 1 } else { %s = 0 }", from, VariableName(inst), VariableName(inst)), nil
+		}
 		return fmt.Sprintf("%s = int%d(uint%d(%s))", VariableName(inst), toType.BitSize, toType.BitSize, from), nil
 
 	default:

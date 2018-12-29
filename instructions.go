@@ -271,6 +271,20 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		return fmt.Sprintf("%s = %s(uintptr(unsafe.Pointer(%s)))", VariableName(inst), to, from), nil
 
+	case *ir.InstSDiv:
+		x, err := FormatSigned(inst.X)
+		if err != nil {
+			return "", fmt.Errorf("error translating left operand (%v): %v", inst.X, err)
+		}
+		y, err := FormatSigned(inst.Y)
+		if err != nil {
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+		}
+		if intType, ok := inst.Typ.(*types.IntType); ok && intType.BitSize == 8 {
+			return fmt.Sprintf("%s = byte(%s / %s)", VariableName(inst), x, y), nil
+		}
+		return fmt.Sprintf("%s = %s / %s", VariableName(inst), x, y), nil
+
 	case *ir.InstSelect:
 		cond, err := FormatValue(inst.Cond)
 		if err != nil {

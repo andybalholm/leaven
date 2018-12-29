@@ -79,27 +79,31 @@ var _ unsafe.Pointer
 			// Just a declaration, not a definition; skip it.
 			continue
 		}
-		fmt.Fprintf(out, "func %s(", f.Name())
-		for i, p := range f.Params {
-			if i > 0 {
-				fmt.Fprint(out, ", ")
+		if f.Name() == "main" {
+			fmt.Fprintln(out, "func main() {")
+		} else {
+			fmt.Fprintf(out, "func %s(", f.Name())
+			for i, p := range f.Params {
+				if i > 0 {
+					fmt.Fprint(out, ", ")
+				}
+				pt, err := TypeSpec(p.Typ)
+				if err != nil {
+					log.Fatalf("Error translating type for parameter %d of %s: %v", i, f.Name(), err)
+				}
+				fmt.Fprintf(out, "%s %s", VariableName(p), pt)
 			}
-			pt, err := TypeSpec(p.Typ)
-			if err != nil {
-				log.Fatalf("Error translating type for parameter %d of %s: %v", i, f.Name(), err)
+			fmt.Fprint(out, ") ")
+			rt := f.Sig.RetType
+			if !types.Equal(rt, types.Void) {
+				retType, err := TypeSpec(rt)
+				if err != nil {
+					log.Fatalf("Error translating return type for %s: %v", f.Name(), err)
+				}
+				fmt.Fprintf(out, "%s ", retType)
 			}
-			fmt.Fprintf(out, "%s %s", VariableName(p), pt)
+			fmt.Fprint(out, "{\n")
 		}
-		fmt.Fprint(out, ") ")
-		rt := f.Sig.RetType
-		if !types.Equal(rt, types.Void) {
-			retType, err := TypeSpec(rt)
-			if err != nil {
-				log.Fatalf("Error translating return type for %s: %v", f.Name(), err)
-			}
-			fmt.Fprintf(out, "%s ", retType)
-		}
-		fmt.Fprint(out, "{\n")
 
 		// Declare variables.
 		vars := make(map[string][]string)
@@ -196,7 +200,11 @@ var _ unsafe.Pointer
 				if err != nil {
 					log.Fatalf("Error translating return value (%v): %v", term.X, err)
 				}
-				fmt.Fprintf(out, "\treturn %s\n", retVal)
+				if f.Name() == "main" {
+					fmt.Fprintf(out, "\tos.Exit(%s)\n", retVal)
+				} else {
+					fmt.Fprintf(out, "\treturn %s\n", retVal)
+				}
 
 			case *ir.TermSwitch:
 				x, err := FormatValue(term.X)

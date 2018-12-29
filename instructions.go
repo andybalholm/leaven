@@ -64,14 +64,6 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error translating callee (%v): %v", inst.Callee, err)
 		}
-		switch callee {
-		case "llvm.lifetime.start", "llvm.lifetime.end":
-			// Just an optimizer hint; ignore it.
-			return "", nil
-		case "llvm.objectsize.i64.p0i8":
-			// Use -1 for unknown size.
-			return fmt.Sprintf("%s = -1", VariableName(inst)), nil
-		}
 		args := make([]string, len(inst.Args))
 		for i, a := range inst.Args {
 			v, err := FormatValue(a)
@@ -79,6 +71,16 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 				return "", fmt.Errorf("error translating argument %d (%v): %v", i, a, err)
 			}
 			args[i] = v
+		}
+		switch callee {
+		case "llvm_fabs_f32":
+			if len(args) == 1 {
+				return fmt.Sprintf("%s = float32(math.Abs(float64(%s)))", VariableName(inst), args[0]), nil
+			}
+		case "llvm_fabs_f64", "llvm_fabs_f80", "fabs":
+			callee = "math.Abs"
+		case "llvm_pow_f64":
+			callee = "math.Pow"
 		}
 		if types.Equal(inst.Typ, types.Void) {
 			return fmt.Sprintf("%s(%s)", callee, strings.Join(args, ", ")), nil

@@ -77,16 +77,28 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			args[i] = v
 		}
 		switch callee {
+		case "calloc":
+			if len(args) == 2 {
+				return fmt.Sprintf("%s = (*byte)(noarch.Malloc(int32(%s * %s)))", VariableName(inst), args[0], args[1]), nil
+			}
 		case "llvm_fabs_f32":
 			if len(args) == 1 {
 				return fmt.Sprintf("%s = float32(math.Abs(float64(%s)))", VariableName(inst), args[0]), nil
 			}
 		case "llvm_fabs_f64", "llvm_fabs_f80", "fabs":
 			callee = "math.Abs"
+		case "llvm_memcpy_p0i8_p0i8_i64":
+			return fmt.Sprintf("noarch.Memcpy(unsafe.Pointer(%s), unsafe.Pointer(%s), int32(%s))", args[0], args[1], args[2]), nil
 		case "llvm_pow_f64":
 			callee = "math.Pow"
+		case "malloc":
+			if len(args) == 1 {
+				return fmt.Sprintf("%s = (*byte)(noarch.Malloc(int32(%s)))", VariableName(inst), args[0]), nil
+			}
 		case "printf":
 			callee = "noarch.Printf"
+		case "strcmp":
+			callee = "noarch.Strcmp"
 		}
 		if types.Equal(inst.Typ, types.Void) {
 			return fmt.Sprintf("%s(%s)", callee, strings.Join(args, ", ")), nil

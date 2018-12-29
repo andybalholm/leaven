@@ -84,12 +84,18 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			if len(args) == 2 {
 				return fmt.Sprintf("%s = (*byte)(noarch.Malloc(int32(%s * %s)))", VariableName(inst), args[0], args[1]), nil
 			}
+		case "ldexp":
+			if len(args) == 2 {
+				return fmt.Sprintf("%s = math.Ldexp(%s, int(%s))", VariableName(inst), args[0], args[1]), nil
+			}
 		case "llvm_fabs_f32":
 			if len(args) == 1 {
 				return fmt.Sprintf("%s = float32(math.Abs(float64(%s)))", VariableName(inst), args[0]), nil
 			}
 		case "llvm_fabs_f64", "llvm_fabs_f80", "fabs":
 			callee = "math.Abs"
+		case "llvm_lifetime_start", "llvm_lifetime_end":
+			return ";", nil
 		case "llvm_memcpy_p0i8_p0i8_i64":
 			return fmt.Sprintf("noarch.Memcpy(unsafe.Pointer(%s), unsafe.Pointer(%s), int32(%s))", args[0], args[1], args[2]), nil
 		case "llvm_memset_p0i8_i64":
@@ -102,6 +108,10 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			}
 		case "printf":
 			callee = "noarch.Printf"
+		case "putchar":
+			if len(args) == 1 {
+				return fmt.Sprintf("if _, err := os.Stdout.Write([]byte{byte(%s)}); err != nil { %s = -1 } else { %s = %s }", args[0], VariableName(inst), VariableName(inst), args[0]), nil
+			}
 		case "strcmp":
 			callee = "noarch.Strcmp"
 		}

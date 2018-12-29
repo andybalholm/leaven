@@ -50,7 +50,7 @@ func GetElementPtr(elemType types.Type, src value.Value, indices []value.Value) 
 			offset = fmt.Sprintf("%s * unsafe.Sizeof(*(*%s)(nil))", firstIndex, et)
 		}
 		result = fmt.Sprintf("uintptr(unsafe.Pointer(%s)) + %s", source, offset)
-		result = fmt.Sprintf("(*%s)(unsafe.Pointer(%s))", elemType, result)
+		result = fmt.Sprintf("(*%s)(unsafe.Pointer(%s))", et, result)
 	}
 
 	currentType := elemType

@@ -201,7 +201,7 @@ var _ unsafe.Pointer
 					log.Fatalf("Error translating return value (%v): %v", term.X, err)
 				}
 				if f.Name() == "main" {
-					fmt.Fprintf(out, "\tos.Exit(%s)\n", retVal)
+					fmt.Fprintf(out, "\tos.Exit(int(%s))\n", retVal)
 				} else {
 					fmt.Fprintf(out, "\treturn %s\n", retVal)
 				}

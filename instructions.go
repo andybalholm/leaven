@@ -89,6 +89,8 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			callee = "math.Abs"
 		case "llvm_memcpy_p0i8_p0i8_i64":
 			return fmt.Sprintf("noarch.Memcpy(unsafe.Pointer(%s), unsafe.Pointer(%s), int32(%s))", args[0], args[1], args[2]), nil
+		case "llvm_memset_p0i8_i64":
+			return fmt.Sprintf("noarch.Memset(unsafe.Pointer(%s), int32(%s), int32(%s))", args[0], args[1], args[2]), nil
 		case "llvm_pow_f64":
 			callee = "math.Pow"
 		case "malloc":

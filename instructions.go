@@ -108,6 +108,15 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		return fmt.Sprintf("%s = %s(%s)", VariableName(inst), callee, strings.Join(args, ", ")), nil
 
 	case *ir.InstFCmp:
+		x, err := FormatValue(inst.X)
+		if err != nil {
+			return "", fmt.Errorf("error translating left operand (%v): %v", inst.X, err)
+		}
+		y, err := FormatValue(inst.Y)
+		if err != nil {
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+		}
+
 		var op string
 		switch inst.Pred {
 		case enum.FPredOEQ:
@@ -122,18 +131,26 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			op = "<"
 		case enum.FPredUNE:
 			op = "!="
+		case enum.FPredORD:
+			return fmt.Sprintf("%s = %s == %s && %s == %s", VariableName(inst), x, x, y, y), nil
+		case enum.FPredUNO:
+			return fmt.Sprintf("%s = %s != %s || %s != %s", VariableName(inst), x, x, y, y), nil
+		case enum.FPredUEQ:
+			return fmt.Sprintf("%s = %s != %s || %s != %s || %s == %s", VariableName(inst), x, x, y, y, x, y), nil
+		case enum.FPredUGT:
+			return fmt.Sprintf("%s = %s != %s || %s != %s || %s > %s", VariableName(inst), x, x, y, y, x, y), nil
+		case enum.FPredUGE:
+			return fmt.Sprintf("%s = %s != %s || %s != %s || %s >= %s", VariableName(inst), x, x, y, y, x, y), nil
+		case enum.FPredULT:
+			return fmt.Sprintf("%s = %s != %s || %s != %s || %s < %s", VariableName(inst), x, x, y, y, x, y), nil
+		case enum.FPredULE:
+			return fmt.Sprintf("%s = %s != %s || %s != %s || %s <= %s", VariableName(inst), x, x, y, y, x, y), nil
+		case enum.FPredONE:
+			return fmt.Sprintf("%s = %s == %s && %s == %s && %s != %s", VariableName(inst), x, x, y, y, x, y), nil
 		default:
 			return "", fmt.Errorf("unsupported comparison predicate: %v", inst.Pred)
 		}
 
-		x, err := FormatValue(inst.X)
-		if err != nil {
-			return "", fmt.Errorf("error translating left operand (%v): %v", inst.X, err)
-		}
-		y, err := FormatValue(inst.Y)
-		if err != nil {
-			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
-		}
 		return fmt.Sprintf("%s = %s %s %s", VariableName(inst), x, op, y), nil
 
 	case *ir.InstFDiv:

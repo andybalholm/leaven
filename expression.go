@@ -20,8 +20,12 @@ func GetElementPtr(elemType types.Type, src value.Value, indices []value.Value) 
 
 	zeroFirstIndex := false
 	positiveFirstIndex := false
-	if firstIndex, ok := indices[0].(*constant.Int); ok {
-		switch firstIndex.X.Sign() {
+	firstIndex := indices[0]
+	if ci, ok := firstIndex.(*constant.Index); ok {
+		firstIndex = ci.Constant
+	}
+	if fi, ok := firstIndex.(*constant.Int); ok {
+		switch fi.X.Sign() {
 		case 0:
 			zeroFirstIndex = true
 		case 1:

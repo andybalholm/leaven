@@ -13,11 +13,15 @@ import (
 
 // VariableName returns the name to use for a local variable or parameter.
 func VariableName(v value.Named) string {
-	if name := v.Name(); name != "" {
-		name = strings.Replace(name, ".", "_", -1)
-		return name
+	name := v.Name()
+	if name == "" {
+		return "v" + strings.TrimPrefix(v.Ident(), "%")
 	}
-	return "v" + strings.TrimPrefix(v.Ident(), "%")
+	if c := name[0]; '0' <= c && c <= '9' {
+		name = "v" + name
+	}
+	name = strings.Replace(name, ".", "_", -1)
+	return name
 }
 
 // FormatValue formats a constant or variable as it should appear in an expression.
@@ -121,7 +125,7 @@ func FormatValue(v value.Value) (string, error) {
 	case *constant.ExprGetElementPtr:
 		indices := make([]value.Value, len(v.Indices))
 		for i, index := range v.Indices {
-			indices[i] = index.Index
+			indices[i] = index
 		}
 		return GetElementPtr(v.ElemType, v.Src, indices)
 
@@ -137,6 +141,9 @@ func FormatValue(v value.Value) (string, error) {
 			return "math.Inf(-1)", nil
 		}
 		return v.X.String(), nil
+
+	case *constant.Index:
+		return FormatValue(v.Constant)
 
 	case *constant.Int:
 		return v.X.String(), nil

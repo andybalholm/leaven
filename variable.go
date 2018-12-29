@@ -130,17 +130,23 @@ func FormatValue(v value.Value) (string, error) {
 		return GetElementPtr(v.ElemType, v.Src, indices)
 
 	case *constant.Float:
-		if v.NaN {
-			return "math.NaN()", nil
-		}
 		result := v.X.String()
+		special := false
 		switch result {
 		case "+Inf":
-			return "math.Inf(1)", nil
+			result = "math.Inf(1)"
+			special = true
 		case "-Inf":
-			return "math.Inf(-1)", nil
+			result = "math.Inf(-1)"
+			special = true
+		case "NaN":
+			result = "math.NaN()"
+			special = true
 		}
-		return v.X.String(), nil
+		if special && v.Typ.Kind == types.FloatKindFloat {
+			result = fmt.Sprintf("float32(%s)", result)
+		}
+		return result, nil
 
 	case *constant.Index:
 		return FormatValue(v.Constant)

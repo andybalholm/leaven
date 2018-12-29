@@ -103,6 +103,21 @@ func FormatValue(v value.Value) (string, error) {
 		}
 		return b.String(), nil
 
+	case *constant.ExprBitCast:
+		from, err := FormatValue(v.From)
+		if err != nil {
+			return "", fmt.Errorf("error translating source (%v): %v", v.From, err)
+		}
+		switch v.From.(type) {
+		case *ir.Global:
+			from = "&" + from
+		}
+		to, err := TypeSpec(v.To)
+		if err != nil {
+			return "", fmt.Errorf("error translating type (%v): %v", v.To, err)
+		}
+		return fmt.Sprintf("(%s)(unsafe.Pointer(%s))", to, from), nil
+
 	case *constant.ExprGetElementPtr:
 		indices := make([]value.Value, len(v.Indices))
 		for i, index := range v.Indices {

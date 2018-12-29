@@ -141,6 +141,9 @@ func FormatValue(v value.Value) (string, error) {
 	case *constant.Int:
 		return v.X.String(), nil
 
+	case *constant.Null:
+		return "nil", nil
+
 	case *constant.Struct:
 		t, err := TypeSpec(v.Typ)
 		if err != nil {

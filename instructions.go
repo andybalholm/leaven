@@ -85,6 +85,8 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			callee = "math.Abs"
 		case "llvm_pow_f64":
 			callee = "math.Pow"
+		case "printf":
+			callee = "noarch.Printf"
 		}
 		if types.Equal(inst.Typ, types.Void) {
 			return fmt.Sprintf("%s(%s)", callee, strings.Join(args, ", ")), nil

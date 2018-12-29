@@ -247,6 +247,9 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error translating source (%v): %v", inst.Src, err)
 		}
+		if _, ok := inst.Src.(*ir.Global); ok {
+			return fmt.Sprintf("%s = %s", VariableName(inst), src), nil
+		}
 		return fmt.Sprintf("%s = *%s", VariableName(inst), src), nil
 
 	case *ir.InstLShr:
@@ -367,6 +370,9 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		src, err := FormatValue(inst.Src)
 		if err != nil {
 			return "", fmt.Errorf("error translating source (%v): %v", inst.Src, err)
+		}
+		if _, ok := inst.Dst.(*ir.Global); ok {
+			return fmt.Sprintf("%s = %s", dest, src), nil
 		}
 		return fmt.Sprintf("*%s = %s", dest, src), nil
 

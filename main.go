@@ -107,6 +107,7 @@ var _ unsafe.Pointer
 
 		// Declare variables.
 		vars := make(map[string][]string)
+		var allVars []string
 		for _, b := range f.Blocks {
 			for _, inst := range b.Insts {
 				if inst, ok := inst.(value.Named); ok {
@@ -118,6 +119,7 @@ var _ unsafe.Pointer
 						log.Fatalf("Error translating type of %s in %s: %v", inst.Ident(), f.Name(), err)
 					}
 					vars[t] = append(vars[t], VariableName(inst))
+					allVars = append(allVars, VariableName(inst))
 				}
 			}
 		}
@@ -131,6 +133,15 @@ var _ unsafe.Pointer
 		}
 		if len(vars) > 0 {
 			fmt.Fprintln(out)
+			// Get rid of unused-variable errors.
+			for i := range allVars {
+				if i == 0 {
+					fmt.Fprint(out, "\t_")
+				} else {
+					fmt.Fprint(out, ", _")
+				}
+			}
+			fmt.Fprintf(out, " = %s\n\n", strings.Join(allVars, ", "))
 		}
 
 		// Translate instructions.
@@ -162,7 +173,6 @@ var _ unsafe.Pointer
 				fmt.Fprintf(out, "\tgoto block%d\n", term.Target.LocalID)
 
 			case *ir.TermCondBr:
-				// TODO: Assign values to phi nodes
 				cond, err := FormatValue(term.Cond)
 				if err != nil {
 					log.Fatalf("Error translating condition (%v): %v", term.Cond, err)

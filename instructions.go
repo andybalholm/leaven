@@ -81,9 +81,9 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		switch callee {
 		case "calloc":
-			if len(args) == 2 {
-				return fmt.Sprintf("%s = (*byte)(noarch.Malloc(int32(%s * %s)))", VariableName(inst), args[0], args[1]), nil
-			}
+			callee = "libc.Calloc"
+		case "free":
+			callee = "libc.Free"
 		case "ldexp":
 			if len(args) == 2 {
 				return fmt.Sprintf("%s = math.Ldexp(%s, int(%s))", VariableName(inst), args[0], args[1]), nil
@@ -103,9 +103,7 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		case "llvm_pow_f64":
 			callee = "math.Pow"
 		case "malloc":
-			if len(args) == 1 {
-				return fmt.Sprintf("%s = (*byte)(noarch.Malloc(int32(%s)))", VariableName(inst), args[0]), nil
-			}
+			callee = "libc.Malloc"
 		case "memset_pattern16":
 			callee = "libc.MemsetPattern16"
 		case "printf":

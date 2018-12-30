@@ -97,9 +97,9 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		case "llvm_lifetime_start", "llvm_lifetime_end":
 			return ";", nil
 		case "llvm_memcpy_p0i8_p0i8_i64":
-			return fmt.Sprintf("noarch.Memcpy(unsafe.Pointer(%s), unsafe.Pointer(%s), int32(%s))", args[0], args[1], args[2]), nil
+			return fmt.Sprintf("libc.Memmove(%s, %s, %s)", args[0], args[1], args[2]), nil
 		case "llvm_memset_p0i8_i64":
-			return fmt.Sprintf("noarch.Memset(unsafe.Pointer(%s), int32(%s), int32(%s))", args[0], args[1], args[2]), nil
+			return fmt.Sprintf("libc.Memset(%s, %s, %s)", args[0], args[1], args[2]), nil
 		case "llvm_pow_f64":
 			callee = "math.Pow"
 		case "malloc":

@@ -84,6 +84,12 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			callee = "libc.Calloc"
 		case "free":
 			callee = "libc.Free"
+		case "leaven_va_arg":
+			callee = "libc.VAArg"
+		case "leaven_va_start":
+			if len(args) == 1 {
+				return fmt.Sprintf("*%s = (*byte)(unsafe.Pointer(&varargs))", args[0]), nil
+			}
 		case "ldexp":
 			if len(args) == 2 {
 				return fmt.Sprintf("%s = math.Ldexp(%s, int(%s))", VariableName(inst), args[0], args[1]), nil
@@ -112,10 +118,14 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			if len(args) == 1 {
 				return fmt.Sprintf("if _, err := os.Stdout.Write([]byte{byte(%s)}); err != nil { %s = -1 } else { %s = %s }", args[0], VariableName(inst), VariableName(inst), args[0]), nil
 			}
+		case "__sprintf_chk":
+			return fmt.Sprintf("%s = noarch.Snprintf(%s, %s)", VariableName(inst), args[0], strings.Join(args[2:], ", ")), nil
+		case "__strcat_chk":
+			return fmt.Sprintf("%s = noarch.Strcat(%s, %s)", VariableName(inst), args[0], args[1]), nil
 		case "strcmp":
 			callee = "noarch.Strcmp"
 		}
-		if types.Equal(inst.Typ, types.Void) {
+		if types.Equal(inst.Type(), types.Void) {
 			return fmt.Sprintf("%s(%s)", callee, strings.Join(args, ", ")), nil
 		}
 		return fmt.Sprintf("%s = %s(%s)", VariableName(inst), callee, strings.Join(args, ", ")), nil

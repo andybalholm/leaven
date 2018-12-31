@@ -93,6 +93,12 @@ var _ unsafe.Pointer
 				}
 				fmt.Fprintf(out, "%s %s", VariableName(p), pt)
 			}
+			if f.Sig.Variadic {
+				if len(f.Params) > 0 {
+					fmt.Fprint(out, ", ")
+				}
+				fmt.Fprint(out, "varargs ...interface{}")
+			}
 			fmt.Fprint(out, ") ")
 			rt := f.Sig.RetType
 			if !types.Equal(rt, types.Void) {

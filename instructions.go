@@ -123,7 +123,7 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		case "__strcat_chk":
 			return fmt.Sprintf("%s = noarch.Strcat(%s, %s)", VariableName(inst), args[0], args[1]), nil
 		case "strcmp":
-			callee = "noarch.Strcmp"
+			callee = "libc.Strcmp"
 		}
 		if types.Equal(inst.Type(), types.Void) {
 			return fmt.Sprintf("%s(%s)", callee, strings.Join(args, ", ")), nil

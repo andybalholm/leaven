@@ -67,6 +67,9 @@ func GetElementPtr(elemType types.Type, src value.Value, indices []value.Value) 
 	currentType := elemType
 
 	for _, index := range indices[1:] {
+		if ind, ok := index.(*constant.Index); ok {
+			index = ind.Constant
+		}
 		switch ct := currentType.(type) {
 		case *types.ArrayType:
 			v, err := FormatValue(index)
@@ -80,7 +83,7 @@ func GetElementPtr(elemType types.Type, src value.Value, indices []value.Value) 
 		case *types.StructType:
 			ci, ok := index.(*constant.Int)
 			if !ok {
-				return "", fmt.Errorf("non-constant index into struct: %v", index)
+				return "", fmt.Errorf("non-constant index into struct: %v %T", index, index)
 			}
 			result = fmt.Sprintf("%s.F%v", result, ci.X)
 			currentType = ct.Fields[ci.X.Int64()]

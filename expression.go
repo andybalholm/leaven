@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/llir/llvm/ir/constant"
 	"github.com/llir/llvm/ir/types"
@@ -63,6 +64,7 @@ func GetElementPtr(elemType types.Type, src value.Value, indices []value.Value) 
 		result = fmt.Sprintf("uintptr(unsafe.Pointer(%s)) %s", source, offset)
 		result = fmt.Sprintf("(*%s)(unsafe.Pointer(%s))", et, result)
 	}
+	result = strings.TrimPrefix(result, "&")
 
 	currentType := elemType
 

@@ -56,10 +56,6 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error translating source (%v): %v", inst.From, err)
 		}
-		switch inst.From.(type) {
-		case *ir.Global:
-			from = "&" + from
-		}
 		to, err := TypeSpec(inst.To)
 		if err != nil {
 			return "", fmt.Errorf("error translating type (%v): %v", inst.To, err)
@@ -286,8 +282,8 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error translating source (%v): %v", inst.Src, err)
 		}
-		if _, ok := inst.Src.(*ir.Global); ok {
-			return fmt.Sprintf("%s = %s", VariableName(inst), src), nil
+		if strings.HasPrefix(src, "&") {
+			return fmt.Sprintf("%s = %s", VariableName(inst), strings.TrimPrefix(src, "&")), nil
 		}
 		return fmt.Sprintf("%s = *%s", VariableName(inst), src), nil
 
@@ -413,8 +409,8 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error translating source (%v): %v", inst.Src, err)
 		}
-		if _, ok := inst.Dst.(*ir.Global); ok {
-			return fmt.Sprintf("%s = %s", dest, src), nil
+		if strings.HasPrefix(dest, "&") {
+			return fmt.Sprintf("%s = %s", strings.TrimPrefix(dest, "&"), src), nil
 		}
 		return fmt.Sprintf("*%s = %s", dest, src), nil
 

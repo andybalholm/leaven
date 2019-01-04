@@ -27,6 +27,12 @@ func VariableName(v value.Named) string {
 // FormatValue formats a constant or variable as it should appear in an expression.
 func FormatValue(v value.Value) (string, error) {
 	switch v := v.(type) {
+	case *ir.Global:
+		if types.IsFunc(v.ContentType) {
+			return VariableName(v), nil
+		}
+		return "&" + VariableName(v), nil
+
 	case value.Named:
 		return VariableName(v), nil
 
@@ -111,10 +117,6 @@ func FormatValue(v value.Value) (string, error) {
 		from, err := FormatValue(v.From)
 		if err != nil {
 			return "", fmt.Errorf("error translating source (%v): %v", v.From, err)
-		}
-		switch v.From.(type) {
-		case *ir.Global:
-			from = "&" + from
 		}
 		to, err := TypeSpec(v.To)
 		if err != nil {

@@ -26,3 +26,26 @@ func memsetPattern(dest, pattern []byte) {
 		copy(dest[i:], pattern)
 	}
 }
+
+// StrcatChk concatenates two C strings. It panics if the space required is
+// more than destlen bytes.
+func StrcatChk(dest *byte, src *byte, destlen int64) *byte {
+	d := byteSlice(dest, int(destlen))
+	s := byteSlice(src, int(destlen+1)) // The +1 ensures a panic if dest is an empty string, and src is too long.
+
+	// Find the end of dest.
+	i := 0
+	for d[i] != 0 {
+		i++
+	}
+
+	for _, c := range s {
+		d[i] = c
+		i++
+		if c == 0 {
+			break
+		}
+	}
+
+	return dest
+}

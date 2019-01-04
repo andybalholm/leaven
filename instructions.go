@@ -107,8 +107,6 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			}
 		case "__sprintf_chk":
 			return fmt.Sprintf("%s = noarch.Snprintf(%s, %s)", VariableName(inst), args[0], strings.Join(args[2:], ", ")), nil
-		case "__strcat_chk":
-			return fmt.Sprintf("%s = noarch.Strcat(%s, %s)", VariableName(inst), args[0], args[1]), nil
 		}
 		if types.Equal(inst.Type(), types.Void) {
 			return fmt.Sprintf("%s(%s)", callee, strings.Join(args, ", ")), nil
@@ -483,5 +481,6 @@ var libraryFunctions = map[string]string{
 	"malloc":           "libc.Malloc",
 	"memset_pattern16": "libc.MemsetPattern16",
 	"printf":           "noarch.Printf",
+	"__strcat_chk":     "libc.StrcatChk",
 	"strcmp":           "libc.Strcmp",
 }

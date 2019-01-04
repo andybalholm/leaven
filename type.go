@@ -100,13 +100,21 @@ func TypeDefinition(t types.Type) (string, error) {
 
 // TypeSpec returns the name (if it has one) or the definition of t.
 func TypeSpec(t types.Type) (string, error) {
-	if name := t.Name(); name != "" {
-		if name == "union.anon" {
-			return TypeDefinition(t)
-		}
-		name = strings.TrimPrefix(name, "struct.")
-		name = strings.TrimPrefix(name, "union.")
+	if name := TypeName(t); name != "" {
 		return name, nil
 	}
 	return TypeDefinition(t)
+}
+
+// TypeName returns t's name, or the empty string if t is not a named type.
+func TypeName(t types.Type) string {
+	name := t.Name()
+	name = strings.TrimPrefix(name, "struct.")
+	name = strings.TrimPrefix(name, "union.")
+
+	if name == "anon" {
+		return ""
+	}
+
+	return name
 }

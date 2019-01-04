@@ -33,17 +33,11 @@ func main() {
 
 	fmt.Fprint(out, "package main\n\n")
 
-	for i, t := range m.TypeDefs {
-		name := t.Name()
-		if name == "union.anon" {
+	for _, t := range m.TypeDefs {
+		name := TypeName(t)
+		if name == "" {
 			continue
 		}
-		if name == "" {
-			name = fmt.Sprintf("type%d", i)
-		}
-		name = strings.TrimPrefix(name, "struct.")
-		name = strings.TrimPrefix(name, "union.")
-		t.SetName(name)
 
 		def, err := TypeDefinition(t)
 		if err != nil {

@@ -79,13 +79,10 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			}
 			args[i] = v
 		}
+		if renamed, ok := libraryFunctions[callee]; ok {
+			callee = renamed
+		}
 		switch callee {
-		case "calloc":
-			callee = "libc.Calloc"
-		case "free":
-			callee = "libc.Free"
-		case "leaven_va_arg":
-			callee = "libc.VAArg"
 		case "leaven_va_start":
 			if len(args) == 1 {
 				return fmt.Sprintf("*%s = (*byte)(unsafe.Pointer(&varargs))", args[0]), nil
@@ -98,22 +95,12 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			if len(args) == 1 {
 				return fmt.Sprintf("%s = float32(math.Abs(float64(%s)))", VariableName(inst), args[0]), nil
 			}
-		case "llvm_fabs_f64", "llvm_fabs_f80", "fabs":
-			callee = "math.Abs"
 		case "llvm_lifetime_start", "llvm_lifetime_end":
 			return ";", nil
 		case "llvm_memcpy_p0i8_p0i8_i64":
 			return fmt.Sprintf("libc.Memmove(%s, %s, %s)", args[0], args[1], args[2]), nil
 		case "llvm_memset_p0i8_i64":
 			return fmt.Sprintf("libc.Memset(%s, %s, %s)", args[0], args[1], args[2]), nil
-		case "llvm_pow_f64":
-			callee = "math.Pow"
-		case "malloc":
-			callee = "libc.Malloc"
-		case "memset_pattern16":
-			callee = "libc.MemsetPattern16"
-		case "printf":
-			callee = "noarch.Printf"
 		case "putchar":
 			if len(args) == 1 {
 				return fmt.Sprintf("if _, err := os.Stdout.Write([]byte{byte(%s)}); err != nil { %s = -1 } else { %s = %s }", args[0], VariableName(inst), VariableName(inst), args[0]), nil
@@ -122,8 +109,6 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			return fmt.Sprintf("%s = noarch.Snprintf(%s, %s)", VariableName(inst), args[0], strings.Join(args[2:], ", ")), nil
 		case "__strcat_chk":
 			return fmt.Sprintf("%s = noarch.Strcat(%s, %s)", VariableName(inst), args[0], args[1]), nil
-		case "strcmp":
-			callee = "libc.Strcmp"
 		}
 		if types.Equal(inst.Type(), types.Void) {
 			return fmt.Sprintf("%s(%s)", callee, strings.Join(args, ", ")), nil
@@ -485,4 +470,18 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 	default:
 		return "", fmt.Errorf("unsupported instruction type: %T", inst)
 	}
+}
+
+var libraryFunctions = map[string]string{
+	"calloc":           "libc.Calloc",
+	"fabs":             "math.Abs",
+	"free":             "libc.Free",
+	"leaven_va_arg":    "libc.VAArg",
+	"llvm_fabs_f64":    "math.Abs",
+	"llvm_fabs_f80":    "math.Abs",
+	"llvm_pow_f64":     "math.Pow",
+	"malloc":           "libc.Malloc",
+	"memset_pattern16": "libc.MemsetPattern16",
+	"printf":           "noarch.Printf",
+	"strcmp":           "libc.Strcmp",
 }

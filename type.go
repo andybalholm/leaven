@@ -81,7 +81,7 @@ func TypeDefinition(t types.Type) (string, error) {
 			if err != nil {
 				return "", fmt.Errorf("error converting type of field %d: %v", i, err)
 			}
-			fmt.Fprintf(b, "\tf%d %s\n", i, fieldType)
+			fmt.Fprintf(b, "\tF%d %s\n", i, fieldType)
 		}
 		b.WriteString("}")
 		return b.String(), nil

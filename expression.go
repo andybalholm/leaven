@@ -82,7 +82,7 @@ func GetElementPtr(elemType types.Type, src value.Value, indices []value.Value) 
 			if !ok {
 				return "", fmt.Errorf("non-constant index into struct: %v", index)
 			}
-			result = fmt.Sprintf("%s.f%v", result, ci.X)
+			result = fmt.Sprintf("%s.F%v", result, ci.X)
 			currentType = ct.Fields[ci.X.Int64()]
 			takeAddress = true
 

@@ -31,12 +31,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Fprint(out, `package main
-
-import "unsafe"
-var _ unsafe.Pointer
-
-`)
+	fmt.Fprint(out, "package main\n\n")
 
 	for i, t := range m.TypeDefs {
 		name := t.Name()

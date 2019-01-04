@@ -154,15 +154,31 @@ func FormatValue(v value.Value) (string, error) {
 		return FormatValue(v.Constant)
 
 	case *constant.Int:
-		result := v.X.String()
-		if v.Typ.BitSize == 1 {
-			if result == "1" {
-				result = "true"
-			} else {
-				result = "false"
-			}
+		var value int64
+		switch {
+		case v.X.IsInt64():
+			value = v.X.Int64()
+		case v.X.IsUint64():
+			value = int64(v.X.Uint64())
+		default:
+			return "", fmt.Errorf("integer constant too large: %v", v.X)
 		}
-		return result, nil
+
+		switch v.Typ.BitSize {
+		case 1:
+			if value != 0 {
+				return "true", nil
+			}
+			return "false", nil
+		case 8:
+			return fmt.Sprint(byte(value)), nil
+		case 16:
+			return fmt.Sprint(int16(value)), nil
+		case 32:
+			return fmt.Sprint(int32(value)), nil
+		default:
+			return fmt.Sprint(value), nil
+		}
 
 	case *constant.Null:
 		return "nil", nil
@@ -228,7 +244,10 @@ func FormatSigned(v value.Value) (string, error) {
 		return "", err
 	}
 
-	if _, ok := v.(*constant.Int); ok {
+	if ci, ok := v.(*constant.Int); ok {
+		if ci.Typ.BitSize == 8 {
+			return fmt.Sprint(int8(ci.X.Int64())), nil
+		}
 		return result, nil
 	}
 
@@ -246,8 +265,32 @@ func FormatUnsigned(v value.Value) (string, error) {
 		return "", err
 	}
 
-	if _, ok := v.(*constant.Int); ok {
-		return result, nil
+	if ci, ok := v.(*constant.Int); ok {
+		var value uint64
+		switch {
+		case ci.X.IsUint64():
+			value = ci.X.Uint64()
+		case ci.X.IsInt64():
+			value = uint64(ci.X.Int64())
+		default:
+			return "", fmt.Errorf("integer constant too large: %v", ci.X)
+		}
+
+		switch ci.Typ.BitSize {
+		case 1:
+			if value != 0 {
+				return "true", nil
+			}
+			return "false", nil
+		case 8:
+			return fmt.Sprint(byte(value)), nil
+		case 16:
+			return fmt.Sprint(uint16(value)), nil
+		case 32:
+			return fmt.Sprint(uint32(value)), nil
+		default:
+			return fmt.Sprint(value), nil
+		}
 	}
 
 	if t, ok := v.Type().(*types.IntType); ok && t.BitSize > 8 {

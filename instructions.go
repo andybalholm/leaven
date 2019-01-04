@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/llir/llvm/ir"
+	"github.com/llir/llvm/ir/constant"
 	"github.com/llir/llvm/ir/enum"
 	"github.com/llir/llvm/ir/types"
 )
@@ -20,6 +21,9 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		y, err := FormatValue(inst.Y)
 		if err != nil {
 			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+		}
+		if ciy, ok := inst.Y.(*constant.Int); ok && ciy.X.Sign() == -1 {
+			return fmt.Sprintf("%s = %s %s", VariableName(inst), x, ciy.X), nil // Use the constant's own minus sign.
 		}
 		return fmt.Sprintf("%s = %s + %s", VariableName(inst), x, y), nil
 
@@ -446,6 +450,20 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			return "", fmt.Errorf("error translating type (%v): %v", inst.To, err)
 		}
 		return fmt.Sprintf("%s = %s(%s)", VariableName(inst), to, from), nil
+
+	case *ir.InstXor:
+		x, err := FormatValue(inst.X)
+		if err != nil {
+			return "", fmt.Errorf("error translating left operand (%v): %v", inst.X, err)
+		}
+		y, err := FormatValue(inst.Y)
+		if err != nil {
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+		}
+		if intType, ok := inst.Typ.(*types.IntType); ok && intType.BitSize == 1 {
+			return fmt.Sprintf("%s = %s != %s", VariableName(inst), x, y), nil
+		}
+		return fmt.Sprintf("%s = %s ^ %s", VariableName(inst), x, y), nil
 
 	case *ir.InstZExt:
 		toType, ok := inst.To.(*types.IntType)

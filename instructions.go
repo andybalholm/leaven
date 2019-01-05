@@ -58,6 +58,20 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		return fmt.Sprintf("%s = %s & %s", VariableName(inst), x, y), nil
 
+	case *ir.InstAShr:
+		x, err := FormatSigned(inst.X)
+		if err != nil {
+			return "", fmt.Errorf("error translating left operand (%v): %v", inst.X, err)
+		}
+		y, err := FormatUnsigned(inst.Y)
+		if err != nil {
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
+		}
+		if t, ok := inst.Typ.(*types.IntType); ok && t.BitSize == 8 {
+			return fmt.Sprintf("%s = byte(%s >> %s)", VariableName(inst), x, y), nil
+		}
+		return fmt.Sprintf("%s = %s >> %s", VariableName(inst), x, y), nil
+
 	case *ir.InstBitCast:
 		from, err := FormatValue(inst.From)
 		if err != nil {

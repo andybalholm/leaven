@@ -77,3 +77,115 @@ block20:
 	v25 = v23 - v24
 	return v25
 }
+
+func Strlen(v0 *byte) int64 {
+	var v8, v12, v18, v31, v35, v36, v41 *byte
+	var v19, v21, v28 *int64
+	var v4, v10, v15, v27, v32, v38 bool
+	var v9, v30, v37 byte
+	var v2, v3, v7, v13, v14, v22, v23, v24, v25, v26, v42, v45, v46 int64
+
+	_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ = v2, v3, v4, v7, v8, v9, v10, v12, v13, v14, v15, v18, v19, v21, v22, v23, v24, v25, v26, v27, v28, v30, v31, v32, v35, v36, v37, v38, v41, v42, v45, v46
+
+	v2 = int64(uintptr(unsafe.Pointer(v0)))
+	v3 = v2 & 7
+	v4 = v3 == 0
+	if v4 {
+		v18 = v0
+		goto block17
+	} else {
+		goto block5
+	}
+
+block5:
+	v7, v8 = v2, v0
+	goto block6
+
+block6:
+	v9 = *v8
+	v10 = v9 == 0
+	if v10 {
+		goto block43
+	} else {
+		goto block11
+	}
+
+block11:
+	v12 = (*byte)(unsafe.Pointer(uintptr(unsafe.Pointer(v8)) + 1*unsafe.Sizeof(*(*byte)(nil))))
+	v13 = int64(uintptr(unsafe.Pointer(v12)))
+	v14 = v13 & 7
+	v15 = v14 == 0
+	if v15 {
+		goto block16
+	} else {
+		v7, v8 = v13, v12
+		goto block6
+	}
+
+block16:
+	v18 = v12
+	goto block17
+
+block17:
+	v19 = (*int64)(unsafe.Pointer(v18))
+	v21 = v19
+	goto block20
+
+block20:
+	v22 = *v21
+	v23 = v22 - 72340172838076673
+	v24 = v22 & -9187201950435737472
+	v25 = v24 ^ -9187201950435737472
+	v26 = v25 & v23
+	v27 = v26 == 0
+	v28 = (*int64)(unsafe.Pointer(uintptr(unsafe.Pointer(v21)) + 1*unsafe.Sizeof(*(*int64)(nil))))
+	if v27 {
+		v21 = v28
+		goto block20
+	} else {
+		goto block29
+	}
+
+block29:
+	v30 = byte(v22)
+	v31 = (*byte)(unsafe.Pointer(v21))
+	v32 = v30 == 0
+	if v32 {
+		v41 = v31
+		goto block40
+	} else {
+		goto block33
+	}
+
+block33:
+	v35 = v31
+	goto block34
+
+block34:
+	v36 = (*byte)(unsafe.Pointer(uintptr(unsafe.Pointer(v35)) + 1*unsafe.Sizeof(*(*byte)(nil))))
+	v37 = *v36
+	v38 = v37 == 0
+	if v38 {
+		goto block39
+	} else {
+		v35 = v36
+		goto block34
+	}
+
+block39:
+	v41 = v36
+	goto block40
+
+block40:
+	v42 = int64(uintptr(unsafe.Pointer(v41)))
+	v45 = v42
+	goto block44
+
+block43:
+	v45 = v7
+	goto block44
+
+block44:
+	v46 = v45 - v2
+	return v46
+}

@@ -119,6 +119,17 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		return fmt.Sprintf("%s = %s(%s)", VariableName(inst), callee, strings.Join(args, ", ")), nil
 
+	case *ir.InstExtractElement:
+		x, err := FormatValue(inst.X)
+		if err != nil {
+			return "", fmt.Errorf("error translating vector (%v): %v", inst.X, err)
+		}
+		index, err := FormatValue(inst.Index)
+		if err != nil {
+			return "", fmt.Errorf("error translating index (%v): %v", inst.Index, err)
+		}
+		return fmt.Sprintf("%s = %s[%s]", VariableName(inst), x, index), nil
+
 	case *ir.InstFCmp:
 		x, err := FormatValue(inst.X)
 		if err != nil {

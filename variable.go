@@ -288,6 +288,16 @@ func FormatUnsigned(v value.Value) (string, error) {
 			value = ci.X.Uint64()
 		case ci.X.IsInt64():
 			value = uint64(ci.X.Int64())
+			switch ci.Typ.BitSize {
+			case 8:
+				return fmt.Sprintf("byte(%d)", byte(value)), nil
+			case 16:
+				return fmt.Sprintf("uint16(%d)", uint16(value)), nil
+			case 32:
+				return fmt.Sprintf("uint32(%d)", uint32(value)), nil
+			default:
+				return fmt.Sprint(value), nil
+			}
 		default:
 			return "", fmt.Errorf("integer constant too large: %v", ci.X)
 		}

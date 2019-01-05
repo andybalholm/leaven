@@ -53,10 +53,10 @@ func TypeDefinition(t types.Type) (string, error) {
 		return b.String(), nil
 
 	case *types.IntType:
-		switch t.BitSize {
-		case 1:
+		switch {
+		case t.BitSize == 1:
 			return "bool", nil
-		case 8:
+		case t.BitSize <= 8:
 			return "byte", nil
 		default:
 			return fmt.Sprintf("int%d", t.BitSize), nil

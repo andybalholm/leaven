@@ -302,6 +302,17 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		return fmt.Sprintf("%s = %s; %s[%s] = %s", VariableName(inst), x, VariableName(inst), index, elem), nil
 
+	case *ir.InstIntToPtr:
+		from, err := FormatValue(inst.From)
+		if err != nil {
+			return "", fmt.Errorf("error translating source (%v): %v", inst.From, err)
+		}
+		to, err := TypeSpec(inst.To)
+		if err != nil {
+			return "", fmt.Errorf("error translating type (%v): %v", inst.To, err)
+		}
+		return fmt.Sprintf("%s = %s(unsafe.Pointer(uintptr(%s)))", VariableName(inst), to, from), nil
+
 	case *ir.InstLoad:
 		src, err := FormatValue(inst.Src)
 		if err != nil {

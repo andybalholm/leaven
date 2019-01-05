@@ -22,6 +22,9 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
 		}
+		if _, ok := inst.Typ.(*types.VectorType); ok {
+			return fmt.Sprintf("for i, v := range %s { %s[i] = v + %s[i] }", x, VariableName(inst), y), nil
+		}
 		if ciy, ok := inst.Y.(*constant.Int); ok && ciy.X.Sign() == -1 {
 			return fmt.Sprintf("%s = %s %s", VariableName(inst), x, ciy.X), nil // Use the constant's own minus sign.
 		}
@@ -509,6 +512,21 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		return fmt.Sprintf("%s = %s - %s", VariableName(inst), x, y), nil
 
 	case *ir.InstTrunc:
+		if vt, ok := inst.To.(*types.VectorType); ok {
+			toType, ok := vt.ElemType.(*types.IntType)
+			if !ok {
+				return "", fmt.Errorf("unsupported To type for zext: %v", inst.To)
+			}
+			to, err := TypeSpec(toType)
+			if err != nil {
+				return "", fmt.Errorf("error translating To type (%v): %v", toType, err)
+			}
+			from, err := FormatValue(inst.From)
+			if err != nil {
+				return "", fmt.Errorf("error translating source (%v): %v", inst.From, err)
+			}
+			return fmt.Sprintf("for i, v := range %s { %s[i] = %s(v) }", from, VariableName(inst), to), nil
+		}
 		to, err := TypeSpec(inst.To)
 		if err != nil {
 			return "", fmt.Errorf("error translating To type (%v): %v", inst.To, err)
@@ -564,7 +582,7 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			if !ok {
 				return "", fmt.Errorf("unsupported From type for zext: %v", inst.From.Type())
 			}
-			from, err := FormatUnsigned(inst.From)
+			from, err := FormatValue(inst.From)
 			if err != nil {
 				return "", fmt.Errorf("error translating source (%v): %v", inst.From, err)
 			}

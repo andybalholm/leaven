@@ -50,6 +50,9 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
 		}
+		if _, ok := inst.Typ.(*types.VectorType); ok {
+			return fmt.Sprintf("for i, v := range %s { %s[i] = v & %s[i] }", x, VariableName(inst), y), nil
+		}
 		if intType, ok := inst.Typ.(*types.IntType); ok && intType.BitSize == 1 {
 			return fmt.Sprintf("%s = %s && %s", VariableName(inst), x, y), nil
 		}
@@ -357,6 +360,9 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
 		}
+		if _, ok := inst.Typ.(*types.VectorType); ok {
+			return fmt.Sprintf("for i, v := range %s { %s[i] = v | %s[i] }", x, VariableName(inst), y), nil
+		}
 		if intType, ok := inst.Typ.(*types.IntType); ok && intType.BitSize == 1 {
 			return fmt.Sprintf("%s = %s || %s", VariableName(inst), x, y), nil
 		}
@@ -508,12 +514,34 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
 		}
+		if _, ok := inst.Typ.(*types.VectorType); ok {
+			return fmt.Sprintf("for i, v := range %s { %s[i] = v ^ %s[i] }", x, VariableName(inst), y), nil
+		}
 		if intType, ok := inst.Typ.(*types.IntType); ok && intType.BitSize == 1 {
 			return fmt.Sprintf("%s = %s != %s", VariableName(inst), x, y), nil
 		}
 		return fmt.Sprintf("%s = %s ^ %s", VariableName(inst), x, y), nil
 
 	case *ir.InstZExt:
+		if vt, ok := inst.To.(*types.VectorType); ok {
+			toType, ok := vt.ElemType.(*types.IntType)
+			if !ok {
+				return "", fmt.Errorf("unsupported To type for zext: %v", inst.To)
+			}
+			ft, ok := inst.From.Type().(*types.VectorType)
+			if !ok {
+				return "", fmt.Errorf("mismatched types for zext: %v and %v", inst.To, inst.From.Type())
+			}
+			fromType, ok := ft.ElemType.(*types.IntType)
+			if !ok {
+				return "", fmt.Errorf("unsupported From type for zext: %v", inst.From.Type())
+			}
+			from, err := FormatUnsigned(inst.From)
+			if err != nil {
+				return "", fmt.Errorf("error translating source (%v): %v", inst.From, err)
+			}
+			return fmt.Sprintf("for i, v := range %s { %s[i] = int%d(uint%d(uint%d(v))) }", from, VariableName(inst), toType.BitSize, toType.BitSize, fromType.BitSize), nil
+		}
 		toType, ok := inst.To.(*types.IntType)
 		if !ok {
 			return "", fmt.Errorf("unsupported To type for zext: %T", inst.To)

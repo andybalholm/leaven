@@ -49,3 +49,13 @@ func StrcatChk(dest *byte, src *byte, destlen int64) *byte {
 
 	return dest
 }
+
+// MemcpyChk copies length bytes from src to dest. If length is greater than
+// destlen (interpreted as unsigned integers), it will panic.
+func MemcpyChk(dest *byte, src *byte, length int64, destlen int64) *byte {
+	if uint64(length) > uint64(destlen) {
+		panic("buffer overflow")
+	}
+	copy(byteSlice(dest, int(length)), byteSlice(src, int(length)))
+	return dest
+}

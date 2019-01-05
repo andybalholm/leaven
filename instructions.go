@@ -20,7 +20,7 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		y, err := FormatValue(inst.Y)
 		if err != nil {
-			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
 		}
 		if ciy, ok := inst.Y.(*constant.Int); ok && ciy.X.Sign() == -1 {
 			return fmt.Sprintf("%s = %s %s", VariableName(inst), x, ciy.X), nil // Use the constant's own minus sign.
@@ -48,7 +48,7 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		y, err := FormatValue(inst.Y)
 		if err != nil {
-			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
 		}
 		if intType, ok := inst.Typ.(*types.IntType); ok && intType.BitSize == 1 {
 			return fmt.Sprintf("%s = %s && %s", VariableName(inst), x, y), nil
@@ -101,6 +101,9 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			return fmt.Sprintf("libc.Memmove(%s, %s, %s)", args[0], args[1], args[2]), nil
 		case "llvm_memset_p0i8_i64":
 			return fmt.Sprintf("libc.Memset(%s, %s, %s)", args[0], args[1], args[2]), nil
+		case "llvm_objectsize_i64_p0i8":
+			// Use -1 for unknown size.
+			return fmt.Sprintf("%s = -1", VariableName(inst)), nil
 		case "putchar":
 			if len(args) == 1 {
 				return fmt.Sprintf("if _, err := os.Stdout.Write([]byte{byte(%s)}); err != nil { %s = -1 } else { %s = %s }", args[0], VariableName(inst), VariableName(inst), args[0]), nil
@@ -120,7 +123,7 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		y, err := FormatValue(inst.Y)
 		if err != nil {
-			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
 		}
 
 		var op string
@@ -166,7 +169,7 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		y, err := FormatValue(inst.Y)
 		if err != nil {
-			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
 		}
 		return fmt.Sprintf("%s = %s / %s", VariableName(inst), x, y), nil
 
@@ -177,7 +180,7 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		y, err := FormatValue(inst.Y)
 		if err != nil {
-			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
 		}
 		return fmt.Sprintf("%s = %s * %s", VariableName(inst), x, y), nil
 
@@ -224,7 +227,7 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		y, err := FormatValue(inst.Y)
 		if err != nil {
-			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
 		}
 		return fmt.Sprintf("%s = %s - %s", VariableName(inst), x, y), nil
 
@@ -277,9 +280,27 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		y, err := format(inst.Y)
 		if err != nil {
-			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
 		}
 		return fmt.Sprintf("%s = %s %s %s", VariableName(inst), x, op, y), nil
+
+	case *ir.InstInsertElement:
+		x, err := FormatValue(inst.X)
+		if err != nil {
+			return "", fmt.Errorf("error translating initial vector (%v): %v", inst.X, err)
+		}
+		elem, err := FormatValue(inst.Elem)
+		if err != nil {
+			return "", fmt.Errorf("error translating new element (%v): %v", inst.Elem, err)
+		}
+		index, err := FormatValue(inst.Index)
+		if err != nil {
+			return "", fmt.Errorf("error translating index (%v): %v", inst.Index, err)
+		}
+		if _, ok := inst.X.(*constant.Undef); ok {
+			return fmt.Sprintf("%s[%s] = %s", VariableName(inst), index, elem), nil
+		}
+		return fmt.Sprintf("%s = %s; %s[%s] = %s", VariableName(inst), x, VariableName(inst), index, elem), nil
 
 	case *ir.InstLoad:
 		src, err := FormatValue(inst.Src)
@@ -298,7 +319,7 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		y, err := FormatUnsigned(inst.Y)
 		if err != nil {
-			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
 		}
 		if t, ok := inst.Typ.(*types.IntType); ok && t.BitSize > 8 {
 			return fmt.Sprintf("%s = int%d(%s >> %s)", VariableName(inst), t.BitSize, x, y), nil
@@ -312,7 +333,7 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		y, err := FormatValue(inst.Y)
 		if err != nil {
-			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
 		}
 		return fmt.Sprintf("%s = %s * %s", VariableName(inst), x, y), nil
 
@@ -323,7 +344,7 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		y, err := FormatValue(inst.Y)
 		if err != nil {
-			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
 		}
 		if intType, ok := inst.Typ.(*types.IntType); ok && intType.BitSize == 1 {
 			return fmt.Sprintf("%s = %s || %s", VariableName(inst), x, y), nil
@@ -348,7 +369,7 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		y, err := FormatSigned(inst.Y)
 		if err != nil {
-			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
 		}
 		if intType, ok := inst.Typ.(*types.IntType); ok && intType.BitSize == 8 {
 			return fmt.Sprintf("%s = byte(%s / %s)", VariableName(inst), x, y), nil
@@ -389,9 +410,25 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		y, err := FormatUnsigned(inst.Y)
 		if err != nil {
-			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
 		}
 		return fmt.Sprintf("%s = %s << %s", VariableName(inst), x, y), nil
+
+	case *ir.InstShuffleVector:
+		x, err := FormatValue(inst.X)
+		if err != nil {
+			return "", fmt.Errorf("error translating left operand (%v): %v", inst.X, err)
+		}
+		y, err := FormatValue(inst.Y)
+		if err != nil {
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
+		}
+		mask, err := FormatValue(inst.Mask)
+		if err != nil {
+			return "", fmt.Errorf("error translating mask (%v): %v", inst.Mask, err)
+		}
+		length := inst.Typ.Len
+		return fmt.Sprintf("for i, m := range %s { if m < %d { %s[i] = %s[m] } else { %s[i] = %s[m - %d] } }", mask, length, VariableName(inst), x, VariableName(inst), y, length), nil
 
 	case *ir.InstSIToFP:
 		from, err := FormatSigned(inst.From)
@@ -425,7 +462,7 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		y, err := FormatValue(inst.Y)
 		if err != nil {
-			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
 		}
 		return fmt.Sprintf("%s = %s - %s", VariableName(inst), x, y), nil
 
@@ -458,7 +495,7 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		y, err := FormatValue(inst.Y)
 		if err != nil {
-			return "", fmt.Errorf("error translating right operand (%v): %v", inst.X, err)
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
 		}
 		if intType, ok := inst.Typ.(*types.IntType); ok && intType.BitSize == 1 {
 			return fmt.Sprintf("%s = %s != %s", VariableName(inst), x, y), nil
@@ -493,6 +530,7 @@ var libraryFunctions = map[string]string{
 	"llvm_fabs_f80":    "math.Abs",
 	"llvm_pow_f64":     "math.Pow",
 	"malloc":           "libc.Malloc",
+	"__memcpy_chk":     "libc.MemcpyChk",
 	"memset_pattern16": "libc.MemsetPattern16",
 	"printf":           "noarch.Printf",
 	"__strcat_chk":     "libc.StrcatChk",

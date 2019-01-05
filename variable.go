@@ -204,6 +204,22 @@ func FormatValue(v value.Value) (string, error) {
 		b.WriteByte('}')
 		return b.String(), nil
 
+	case *constant.Undef:
+		switch v.Typ.(type) {
+		case *types.ArrayType, *types.StructType, *types.VectorType:
+			t, err := TypeSpec(v.Typ)
+			if err != nil {
+				return "", fmt.Errorf("error translating type (%v): %v", v.Typ, err)
+			}
+			return t + "{}", nil
+		case *types.IntType, *types.FloatType:
+			return "0", nil
+		case *types.PointerType:
+			return "nil", nil
+		default:
+			return "", fmt.Errorf("unsupported type for undefined constant: %v", v.Typ)
+		}
+
 	case *constant.Vector:
 		t, err := TypeSpec(v.Typ)
 		if err != nil {

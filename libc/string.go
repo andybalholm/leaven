@@ -16,6 +16,15 @@ func Memset(b *byte, c byte, length int64) *byte {
 	return b
 }
 
+// MemsetChk fills the memory at b with bytes of the value c. If length is
+// greater than destlen (interpreted as unsigned integers), it will panic.
+func MemsetChk(b *byte, c byte, length int64, destlen int64) *byte {
+	if uint64(length) > uint64(destlen) {
+		panic("buffer overflow")
+	}
+	return Memset(b, c, length)
+}
+
 // MemsetPattern16 fills the memory at b with a 16-byte pattern.
 func MemsetPattern16(b *byte, pattern16 *byte, length int64) {
 	memsetPattern(byteSlice(b, int(length)), byteSlice(pattern16, 16))

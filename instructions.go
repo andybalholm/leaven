@@ -339,7 +339,7 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error translating type (%v): %v", inst.To, err)
 		}
-		return fmt.Sprintf("%s = %s(unsafe.Pointer(uintptr(%s)))", VariableName(inst), to, from), nil
+		return fmt.Sprintf("%s = (%s)(unsafe.Pointer(uintptr(%s)))", VariableName(inst), to, from), nil
 
 	case *ir.InstLoad:
 		src, err := FormatValue(inst.Src)

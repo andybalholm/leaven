@@ -4,7 +4,7 @@ var allocated = make(map[*byte][]byte)
 
 // Malloc allocates size bytes of memory, and returns a pointer to the
 // allocated memory. The memory will not be garbage-collected; it must be
-// release by a call to free.
+// released by a call to free.
 func Malloc(size int64) *byte {
 	if size == 0 {
 		return nil

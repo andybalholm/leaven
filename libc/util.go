@@ -6,7 +6,7 @@ import "unsafe"
 
 // byteSlice returns a slice of n bytes, starting at p.
 func byteSlice(p *byte, n int) []byte {
-	return (*[2 << 30]byte)(unsafe.Pointer(p))[:n:n]
+	return (*[1 << 30]byte)(unsafe.Pointer(p))[:n:n]
 }
 
 // GoString returns s converted from a C string to a Go string.

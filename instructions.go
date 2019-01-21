@@ -36,13 +36,13 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			return "", fmt.Errorf("error translating type (%v): %v", inst.ElemType, err)
 		}
 		if inst.NElems == nil {
-			return fmt.Sprintf("%s = new(%s)", VariableName(inst), t), nil
+			return fmt.Sprintf("%s = (*%s)(unsafe.Pointer(libc.Malloc(int64(unsafe.Sizeof(*(*%s)(nil)))))); defer libc.Free((*byte)(unsafe.Pointer(%s)))", VariableName(inst), t, t, VariableName(inst)), nil
 		}
 		nElems, err := FormatValue(inst.NElems)
 		if err != nil {
 			return "", fmt.Errorf("error translating NElems (%v): %v", inst.NElems, err)
 		}
-		return fmt.Sprintf("%s = &make([]%s, %s)[0]", VariableName(inst), t, nElems), nil
+		return fmt.Sprintf("%s = (*%s)(unsafe.Pointer(libc.Malloc(int64(%s * unsafe.Sizeof(*(*%s)(nil)))))); defer libc.Free((*byte)(unsafe.Pointer(%s)))", VariableName(inst), t, nElems, t, VariableName(inst)), nil
 
 	case *ir.InstAnd:
 		x, err := FormatValue(inst.X)

@@ -14,12 +14,6 @@ And I am hoping that it can produce a working Go translation of a program,
 which will be a good starting point for incrementally re-translating it
 (probably by hand) into idiomatic Go.
 
-## Issues
-
-C code translated into Go often fails because its pointer manipulation 
-violates the invariants of the Go garbage collector.
-See https://github.com/elliotchance/c2go/issues/800 for more information.
-
 ## Usage Example
 (Translating `strcmp` from musl libc.)
 

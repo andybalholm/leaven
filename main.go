@@ -150,7 +150,7 @@ func main() {
 				}
 				translated, err := TranslateInstruction(inst)
 				if err != nil {
-					log.Fatalf("Error translating %q: %v", inst.Def(), err)
+					log.Fatalf("Error translating %q: %v", inst.LLString(), err)
 				}
 				if translated != "" {
 					fmt.Fprintf(out, "\t%s\n", translated)
@@ -255,7 +255,7 @@ func main() {
 // PhiAssignments returns an assignment statement expressing the effects of Phi
 // nodes on the branch from block a to block b. If block b has no phi nodes,
 // it returns the empty string.
-func PhiAssignments(a, b *ir.BasicBlock) (string, error) {
+func PhiAssignments(a, b *ir.Block) (string, error) {
 	var dest, src []string
 	for _, inst := range b.Insts {
 		phi, ok := inst.(*ir.InstPhi)

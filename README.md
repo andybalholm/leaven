@@ -19,6 +19,10 @@ which will be a good starting point for incrementally re-translating it
 This software is incomplete and experimental.
 It does not support nearly all LLVM instructions.
 
+I am not using it myself any more. 
+The transpiler at github.com/andybalholm/c2go produces much better results
+(but it is not as automatic).
+
 ## Usage Example
 (Translating `strcmp` from musl libc.)
 

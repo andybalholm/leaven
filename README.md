@@ -14,6 +14,11 @@ And I am hoping that it can produce a working Go translation of a program,
 which will be a good starting point for incrementally re-translating it
 (probably by hand) into idiomatic Go.
 
+## Warning
+
+This software is incomplete and experimental.
+It does not support nearly all LLVM instructions.
+
 ## Usage Example
 (Translating `strcmp` from musl libc.)
 

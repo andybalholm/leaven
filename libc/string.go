@@ -1,5 +1,7 @@
 package libc
 
+import "bytes"
+
 // Memmove copies length bytes from src to dst. The blocks of memory may
 // overlap.
 func Memmove(dst *byte, src *byte, length int64) *byte {
@@ -67,4 +69,15 @@ func MemcpyChk(dest *byte, src *byte, length int64, destlen int64) *byte {
 	}
 	copy(byteSlice(dest, int(length)), byteSlice(src, int(length)))
 	return dest
+}
+
+// Memchr returns a pointer to the first occurrence of c in string s.
+// It returns nil if no such byte exists within n bytes.
+func Memchr(s *byte, c int32, n int64) *byte {
+	b := byteSlice(s, int(n))
+	i := bytes.IndexByte(b, byte(c))
+	if i == -1 {
+		return nil
+	}
+	return &b[i]
 }

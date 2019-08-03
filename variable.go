@@ -21,6 +21,9 @@ func VariableName(v value.Named) string {
 		name = "v" + name
 	}
 	name = strings.Replace(name, ".", "_", -1)
+	if invalidNames[name] {
+		name = "_" + name
+	}
 	return name
 }
 
@@ -33,7 +36,14 @@ func BlockName(v *ir.Block) string {
 		name = "block" + name
 	}
 	name = strings.Replace(name, ".", "_", -1)
+	if invalidNames[name] {
+		name = "_" + name
+	}
 	return name
+}
+
+var invalidNames = map[string]bool{
+	"return": true,
 }
 
 // FormatValue formats a constant or variable as it should appear in an expression.

@@ -142,7 +142,7 @@ func main() {
 		// Translate instructions.
 		for i, b := range f.Blocks {
 			if i != 0 {
-				fmt.Fprintf(out, "\nblock%d:\n", b.LocalID)
+				fmt.Fprintf(out, "\n%s:\n", BlockName(b))
 			}
 			for _, inst := range b.Insts {
 				if _, ok := inst.(*ir.InstPhi); ok {
@@ -165,7 +165,7 @@ func main() {
 				if phis != "" {
 					fmt.Fprintf(out, "\t%s\n", phis)
 				}
-				fmt.Fprintf(out, "\tgoto block%d\n", term.Target.LocalID)
+				fmt.Fprintf(out, "\tgoto %s\n", BlockName(term.Target))
 
 			case *ir.TermCondBr:
 				cond, err := FormatValue(term.Cond)
@@ -180,7 +180,7 @@ func main() {
 				if phis != "" {
 					fmt.Fprintf(out, "\t\t%s\n", phis)
 				}
-				fmt.Fprintf(out, "\t\tgoto block%d\n", term.TargetTrue.LocalID)
+				fmt.Fprintf(out, "\t\tgoto %s\n", BlockName(term.TargetTrue))
 				fmt.Fprintln(out, "\t} else {")
 				phis, err = PhiAssignments(b, term.TargetFalse)
 				if err != nil {
@@ -189,7 +189,7 @@ func main() {
 				if phis != "" {
 					fmt.Fprintf(out, "\t\t%s\n", phis)
 				}
-				fmt.Fprintf(out, "\t\tgoto block%d\n", term.TargetFalse.LocalID)
+				fmt.Fprintf(out, "\t\tgoto %s\n", BlockName(term.TargetFalse))
 				fmt.Fprintln(out, "\t}")
 
 			case *ir.TermRet:
@@ -230,7 +230,7 @@ func main() {
 					if phis != "" {
 						fmt.Fprintf(out, "\t\t%s\n", phis)
 					}
-					fmt.Fprintf(out, "\t\tgoto block%d\n", c.Target.LocalID)
+					fmt.Fprintf(out, "\t\tgoto %s\n", BlockName(c.Target))
 				}
 				fmt.Fprint(out, "\tdefault:\n")
 				phis, err := PhiAssignments(b, term.TargetDefault)
@@ -240,7 +240,7 @@ func main() {
 				if phis != "" {
 					fmt.Fprintf(out, "\t\t%s\n", phis)
 				}
-				fmt.Fprintf(out, "\t\tgoto block%d\n", term.TargetDefault.LocalID)
+				fmt.Fprintf(out, "\t\tgoto %s\n", BlockName(term.TargetDefault))
 				fmt.Fprint(out, "\t}\n")
 
 			default:

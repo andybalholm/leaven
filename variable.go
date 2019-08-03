@@ -24,6 +24,18 @@ func VariableName(v value.Named) string {
 	return name
 }
 
+func BlockName(v *ir.Block) string {
+	name := v.Name()
+	if name == "" {
+		return "block" + strings.TrimPrefix(v.Ident(), "%")
+	}
+	if c := name[0]; '0' <= c && c <= '9' {
+		name = "block" + name
+	}
+	name = strings.Replace(name, ".", "_", -1)
+	return name
+}
+
 // FormatValue formats a constant or variable as it should appear in an expression.
 func FormatValue(v value.Value) (string, error) {
 	switch v := v.(type) {

@@ -19,7 +19,6 @@ which will be a good starting point for incrementally re-translating it
 This software is incomplete and experimental.
 It does not support nearly all LLVM instructions.
 
-I am not using it myself any more. 
 The transpiler at github.com/andybalholm/c2go produces much better results
 (but it is not as automatic).
 
@@ -34,7 +33,7 @@ The transpiler at github.com/andybalholm/c2go produces much better results
 		for (; *l==*r && *l; l++, r++);
 		return *(unsigned char *)l - *(unsigned char *)r;
 	}
-	$ clang -S -emit-llvm -Os strcmp.c
+	$ clang -S -emit-llvm -Os -fno-discard-value-names strcmp.c
 	$ leaven strcmp.ll
 	$ goimports -w strcmp.go
 	$ cat strcmp.go
@@ -42,54 +41,46 @@ The transpiler at github.com/andybalholm/c2go produces much better results
 
 	import "unsafe"
 
-	var _ unsafe.Pointer
+	func strcmp(l *byte, r *byte) int32 {
+		var r_addr_017, l_addr_016, incdec_ptr, incdec_ptr4 *byte
+		var cmp13, tobool14, or_cond15, cmp, tobool, or_cond bool
+		var v0, v1, v2, v3, _lcssa12, _lcssa byte
+		var conv5, conv6, sub int32
 
-	func strcmp(v0 *byte, v1 *byte) int32 {
-		var v10, v11, v12, v13 *byte
-		var v5, v6, v7, v16, v17, v18 bool
-		var v3, v4, v14, v15, v21, v22 byte
-		var v23, v24, v25 int32
+		_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ = v0, v1, cmp13, tobool14, or_cond15, r_addr_017, l_addr_016, incdec_ptr, incdec_ptr4, v2, v3, cmp, tobool, or_cond, _lcssa12, _lcssa, conv5, conv6, sub
 
-		_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ = v3, v4, v5, v6, v7, v10, v11, v12, v13, v14, v15, v16, v17, v18, v21, v22, v23, v24, v25
-
-		v3 = *v0
-		v4 = *v1
-		v5 = v3 != v4
-		v6 = v3 == 0
-		v7 = v6 || v5
-		if v7 {
-			v21, v22 = v3, v4
-			goto block20
+		v0 = *l
+		v1 = *r
+		cmp13 = v0 != v1
+		tobool14 = v0 == 0
+		or_cond15 = tobool14 || cmp13
+		if or_cond15 {
+			_lcssa12, _lcssa = v0, v1
+			goto for_end
 		} else {
-			goto block8
+			r_addr_017, l_addr_016 = r, l
+			goto for_inc
 		}
 
-	block8:
-		v10, v11 = v1, v0
-		goto block9
-
-	block9:
-		v12 = (*byte)(unsafe.Pointer(uintptr(unsafe.Pointer(v11)) + 1*unsafe.Sizeof(*(*byte)(nil))))
-		v13 = (*byte)(unsafe.Pointer(uintptr(unsafe.Pointer(v10)) + 1*unsafe.Sizeof(*(*byte)(nil))))
-		v14 = *v12
-		v15 = *v13
-		v16 = v14 != v15
-		v17 = v14 == 0
-		v18 = v17 || v16
-		if v18 {
-			goto block19
+	for_inc:
+		incdec_ptr = (*byte)(unsafe.Pointer(uintptr(unsafe.Pointer(l_addr_016)) + 1*unsafe.Sizeof(*(*byte)(nil))))
+		incdec_ptr4 = (*byte)(unsafe.Pointer(uintptr(unsafe.Pointer(r_addr_017)) + 1*unsafe.Sizeof(*(*byte)(nil))))
+		v2 = *incdec_ptr
+		v3 = *incdec_ptr4
+		cmp = v2 != v3
+		tobool = v2 == 0
+		or_cond = tobool || cmp
+		if or_cond {
+			_lcssa12, _lcssa = v2, v3
+			goto for_end
 		} else {
-			v10, v11 = v13, v12
-			goto block9
+			r_addr_017, l_addr_016 = incdec_ptr4, incdec_ptr
+			goto for_inc
 		}
 
-	block19:
-		v21, v22 = v14, v15
-		goto block20
-
-	block20:
-		v23 = int32(uint32(v21))
-		v24 = int32(uint32(v22))
-		v25 = v23 - v24
-		return v25
+	for_end:
+		conv5 = int32(uint32(_lcssa12))
+		conv6 = int32(uint32(_lcssa))
+		sub = conv5 - conv6
+		return sub
 	}

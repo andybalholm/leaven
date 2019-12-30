@@ -24,10 +24,11 @@ func VariableName(v value.Named) string {
 	return name
 }
 
-func BlockName(v *ir.Block) string {
-	name := v.Name()
+func BlockName(v value.Value) string {
+	block := v.(*ir.Block)
+	name := block.Name()
 	if name == "" {
-		return "block" + strings.TrimPrefix(v.Ident(), "%")
+		return "block" + strings.TrimPrefix(block.Ident(), "%")
 	}
 	if c := name[0]; '0' <= c && c <= '9' {
 		name = "block" + name

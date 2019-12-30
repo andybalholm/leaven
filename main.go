@@ -255,9 +255,9 @@ func main() {
 // PhiAssignments returns an assignment statement expressing the effects of Phi
 // nodes on the branch from block a to block b. If block b has no phi nodes,
 // it returns the empty string.
-func PhiAssignments(a, b *ir.Block) (string, error) {
+func PhiAssignments(a, b value.Value) (string, error) {
 	var dest, src []string
-	for _, inst := range b.Insts {
+	for _, inst := range b.(*ir.Block).Insts {
 		phi, ok := inst.(*ir.InstPhi)
 		if !ok {
 			break

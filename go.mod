@@ -2,4 +2,7 @@ module github.com/andybalholm/leaven
 
 go 1.13
 
-require github.com/llir/llvm v0.3.0-pre7
+require (
+	github.com/llir/llvm v0.3.0
+	golang.org/x/sys v0.0.0-20191228213918-04cbcbbfeed8
+)

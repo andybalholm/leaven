@@ -426,16 +426,16 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error translating condition (%v): %v", inst.Cond, err)
 		}
-		x, err := FormatValue(inst.X)
+		valueTrue, err := FormatValue(inst.ValueTrue)
 		if err != nil {
-			return "", fmt.Errorf("error translating first operand (%v): %v", inst.X, err)
+			return "", fmt.Errorf("error translating first operand (%v): %v", inst.ValueTrue, err)
 		}
-		y, err := FormatValue(inst.Y)
+		valueFalse, err := FormatValue(inst.ValueFalse)
 		if err != nil {
-			return "", fmt.Errorf("error translating second operand (%v): %v", inst.Y, err)
+			return "", fmt.Errorf("error translating second operand (%v): %v", inst.ValueFalse, err)
 		}
 		name := VariableName(inst)
-		return fmt.Sprintf("if %s { %s = %s } else { %s = %s }", cond, name, x, name, y), nil
+		return fmt.Sprintf("if %s { %s = %s } else { %s = %s }", cond, name, valueTrue, name, valueFalse), nil
 
 	case *ir.InstSExt:
 		toType, ok := inst.To.(*types.IntType)

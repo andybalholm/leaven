@@ -147,6 +147,17 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		return fmt.Sprintf("%s = %s[%s]", VariableName(inst), x, index), nil
 
+	case *ir.InstFAdd:
+		x, err := FormatValue(inst.X)
+		if err != nil {
+			return "", fmt.Errorf("error translating left operand (%v): %v", inst.X, err)
+		}
+		y, err := FormatValue(inst.Y)
+		if err != nil {
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
+		}
+		return fmt.Sprintf("%s = %s + %s", VariableName(inst), x, y), nil
+
 	case *ir.InstFCmp:
 		x, err := FormatValue(inst.X)
 		if err != nil {
@@ -621,6 +632,7 @@ var libraryFunctions = map[string]string{
 	"memset_pattern16": "libc.MemsetPattern16",
 	"__memset_chk":     "libc.MemsetChk",
 	"printf":           "noarch.Printf",
+	"puts":             "noarch.Puts",
 	"scanf":            "noarch.Scanf",
 	"__strcat_chk":     "libc.StrcatChk",
 	"strchr":           "libc.Strchr",

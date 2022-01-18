@@ -36,13 +36,17 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			return "", fmt.Errorf("error translating type (%v): %v", inst.ElemType, err)
 		}
 		if inst.NElems == nil {
-			return fmt.Sprintf("%s = (*%s)(unsafe.Pointer(&make([]byte, (unsafe.Sizeof(*(*%s)(nil))+1))[0]))", VariableName(inst), t, t), nil
+			if _, ok := inst.ElemType.(*types.ArrayType); ok {
+				// If it's an array, allocate an extra byte to allow indexing off the end.
+				return fmt.Sprintf("%s = &new(struct{v %s; b byte}).v", VariableName(inst), t), nil
+			}
+			return fmt.Sprintf("%s = new(%s)", VariableName(inst), t), nil
 		}
 		nElems, err := FormatValue(inst.NElems)
 		if err != nil {
 			return "", fmt.Errorf("error translating NElems (%v): %v", inst.NElems, err)
 		}
-		return fmt.Sprintf("%s = (*%s)(unsafe.Pointer(&make([]byte, (unsafe.Sizeof(*(*%s)(nil)) * %s + 1))[0]))", VariableName(inst), t, t, nElems), nil
+		return fmt.Sprintf("%s = &make([]%s, %s + 1)[0]", VariableName(inst), t, nElems), nil
 
 	case *ir.InstAnd:
 		x, err := FormatValue(inst.X)

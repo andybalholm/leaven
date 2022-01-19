@@ -20,8 +20,6 @@ func GetElementPtr(elemType types.Type, src value.Value, indices []value.Value) 
 	}
 
 	zeroFirstIndex := false
-	positiveFirstIndex := false
-	negativeFirstIndex := false
 	firstIndex := indices[0]
 	if ci, ok := firstIndex.(*constant.Index); ok {
 		firstIndex = ci.Constant
@@ -30,10 +28,6 @@ func GetElementPtr(elemType types.Type, src value.Value, indices []value.Value) 
 		switch fi.X.Sign() {
 		case 0:
 			zeroFirstIndex = true
-		case 1:
-			positiveFirstIndex = true
-		case -1:
-			negativeFirstIndex = true
 		}
 	}
 	takeAddress := false
@@ -49,20 +43,7 @@ func GetElementPtr(elemType types.Type, src value.Value, indices []value.Value) 
 		if err != nil {
 			return "", fmt.Errorf("error translating first index (%v): %v", indices[0], err)
 		}
-		et, err := TypeSpec(elemType)
-		if err != nil {
-			return "", fmt.Errorf("error translating element type (%v): %v", elemType, err)
-		}
-		offset := fmt.Sprintf("+ uintptr(int64(%s))*unsafe.Sizeof(*(*%s)(nil))", firstIndex, et)
-		if positiveFirstIndex {
-			offset = fmt.Sprintf("+ %s*unsafe.Sizeof(*(*%s)(nil))", firstIndex, et)
-		} else if negativeFirstIndex {
-			// Let the negative number supply its own minus sign for subtraction.
-			offset = fmt.Sprintf("%s*unsafe.Sizeof(*(*%s)(nil))", firstIndex, et)
-		}
-
-		result = fmt.Sprintf("uintptr(unsafe.Pointer(%s)) %s", source, offset)
-		result = fmt.Sprintf("(*%s)(unsafe.Pointer(%s))", et, result)
+		result = fmt.Sprintf("libc.AddPointer(%s, %s)", source, firstIndex)
 	}
 	result = strings.TrimPrefix(result, "&")
 

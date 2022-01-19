@@ -8,6 +8,7 @@ require (
 )
 
 require (
+	github.com/elliotchance/c2go v0.26.10 // indirect
 	github.com/llir/ll v0.0.0-20210719001141-246f2b6b1fa9 // indirect
 	github.com/mewmew/float v0.0.0-20201204173432-505706aa38fa // indirect
 	github.com/pkg/errors v0.9.1 // indirect

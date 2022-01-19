@@ -51,3 +51,7 @@ func doTestCase(t *testing.T, progName string) {
 func TestHelloWorld(t *testing.T) {
 	doTestCase(t, "hello")
 }
+
+func TestBinaryTrees(t *testing.T) {
+	doTestCase(t, "binarytrees")
+}

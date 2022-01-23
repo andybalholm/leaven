@@ -107,6 +107,12 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			callee = renamed
 		}
 		switch callee {
+		case "calloc", "malloc":
+			if pt, ok := inst.Typ.(*types.PointerType); ok {
+				if et, err := TypeSpec(pt.ElemType); err == nil {
+					callee = fmt.Sprintf("libc.%s[%s]", strings.Title(callee), et)
+				}
+			}
 		case "leaven_va_start":
 			if len(args) == 1 {
 				return fmt.Sprintf("*%s = (*byte)(unsafe.Pointer(&varargs))", args[0]), nil
@@ -622,15 +628,12 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 }
 
 var libraryFunctions = map[string]string{
-	"calloc":           "libc.Calloc",
 	"fabs":             "math.Abs",
-	"free":             "libc.Free",
 	"getchar":          "noarch.Getchar",
 	"leaven_va_arg":    "libc.VAArg",
 	"llvm_fabs_f64":    "math.Abs",
 	"llvm_fabs_f80":    "math.Abs",
 	"llvm_pow_f64":     "math.Pow",
-	"malloc":           "libc.Malloc",
 	"memchr":           "libc.Memchr",
 	"memcmp":           "libc.Memcmp",
 	"__memcpy_chk":     "libc.MemcpyChk",

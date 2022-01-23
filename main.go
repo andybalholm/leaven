@@ -68,6 +68,9 @@ func main() {
 			// Just a declaration, not a definition; skip it.
 			continue
 		}
+
+		fixMalloc(f)
+
 		if f.Name() == "main" {
 			fmt.Fprintln(out, "func main() {")
 		} else {

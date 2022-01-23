@@ -1,37 +1,21 @@
 package libc
 
-import (
-	"sync"
-)
+import "unsafe"
 
-var mallocLock sync.Mutex
-var allocated = make(map[*byte][]byte)
-
-// Malloc allocates size bytes of memory, and returns a pointer to the
-// allocated memory. The memory will not be garbage-collected; it must be
-// released by a call to free.
-func Malloc(size int64) *byte {
-	if size == 0 {
-		return nil
+// Malloc allocates n bytes of memory. It informs the garbage collector that
+// the memory will be used to store objects of type T.
+func Malloc[T any](n int64) *T {
+	var p *T
+	if uintptr(n) == unsafe.Sizeof(*p) {
+		return new(T)
 	}
-	mallocLock.Lock()
-	defer mallocLock.Unlock()
-
-	b := make([]byte, size+1)
-	p := &b[0]
-	allocated[p] = b
-	return p
-}
-
-// Free releases memory allocated by Malloc.
-func Free(p *byte) {
-	mallocLock.Lock()
-	defer mallocLock.Unlock()
-
-	delete(allocated, p)
+	// Allocate one extra element to allow indexing off the end, like C tends
+	// to do.
+	count := uintptr(n)/unsafe.Sizeof(*p) + 1
+	return &make([]T, count)[0]
 }
 
 // Calloc allocates a block of memory for count objects of size bytes each.
-func Calloc(count, size int64) *byte {
-	return Malloc(count * size)
+func Calloc[T any](count, size int64) *T {
+	return Malloc[T](count * size)
 }

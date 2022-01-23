@@ -118,3 +118,54 @@ func TypeName(t types.Type) string {
 
 	return name
 }
+
+// compatiblePointerTypes returns whether casting t1 to t2 can be allowed without
+// causing too many problems for the garbage collector.
+func compatiblePointerTypes(t1, t2 types.Type) bool {
+	var e1, e2 types.Type
+	if t1, ok := t1.(*types.PointerType); ok {
+		e1 = t1.ElemType
+	} else {
+		return false
+	}
+	if t2, ok := t2.(*types.PointerType); ok {
+		e2 = t2.ElemType
+	} else {
+		return false
+	}
+
+	if types.Equal(e1, e2) {
+		return true
+	}
+
+	return !hasPointers(e1) && !hasPointers(e2)
+}
+
+// hasPointers returns whether t contains pointers.
+func hasPointers(t types.Type) bool {
+	switch t := t.(type) {
+	case *types.ArrayType:
+		return hasPointers(t.ElemType)
+	case *types.FloatType:
+		return false
+	case *types.FuncType:
+		return true
+	case *types.IntType:
+		return false
+	case *types.PointerType:
+		return true
+	case *types.StructType:
+		for _, f := range t.Fields {
+			if hasPointers(f) {
+				return true
+			}
+		}
+		return false
+	case *types.VectorType:
+		return hasPointers(t.ElemType)
+	default:
+		// We don't know if it contains pointers, so we assume it does,
+		// since that means we'll be more careful with it.
+		return true
+	}
+}

@@ -636,7 +636,7 @@ var libraryFunctions = map[string]string{
 	"memset_pattern16": "libc.MemsetPattern16",
 	"__memset_chk":     "libc.MemsetChk",
 	"printf":           "libc.Printf",
-	"puts":             "noarch.Puts",
+	"puts":             "libc.Puts",
 	"scanf":            "noarch.Scanf",
 	"__strcat_chk":     "libc.StrcatChk",
 	"strchr":           "libc.Strchr",

@@ -120,3 +120,11 @@ func Printf(format *byte, args ...any) int32 {
 	}
 	return int32(n)
 }
+
+func Puts(s *byte) int32 {
+	n, err := fmt.Printf("%s\n", unsafe.Slice(s, Strlen(s)))
+	if err != nil {
+		return -1
+	}
+	return int32(n)
+}

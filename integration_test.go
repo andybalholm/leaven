@@ -52,6 +52,10 @@ func TestHelloWorld(t *testing.T) {
 	doTestCase(t, "hello")
 }
 
+func TestHelloWorldPuts(t *testing.T) {
+	doTestCase(t, "hello-puts")
+}
+
 func TestBinaryTrees(t *testing.T) {
 	doTestCase(t, "binarytrees")
 }

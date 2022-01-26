@@ -625,7 +625,7 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 
 var libraryFunctions = map[string]string{
 	"fabs":             "math.Abs",
-	"getchar":          "noarch.Getchar",
+	"getchar":          "libc.Getchar",
 	"leaven_va_arg":    "libc.VAArg",
 	"llvm_fabs_f64":    "math.Abs",
 	"llvm_fabs_f80":    "math.Abs",

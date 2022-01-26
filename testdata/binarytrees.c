@@ -86,7 +86,7 @@ int test_main()
     stretchTree = BottomUpTree(stretchDepth);
     printf
     (
-        "stretch tree of depth %d\t check: %d\n",
+        "stretch tree of depth %u\t check: %li\n",
         stretchDepth,
         ItemCheck(stretchTree)
     );
@@ -115,7 +115,7 @@ int test_main()
 
         printf
         (
-            "%d\t trees of depth %d\t check: %d\n",
+            "%li\t trees of depth %u\t check: %li\n",
             iterations,
             depth,
             check
@@ -124,7 +124,7 @@ int test_main()
 
     printf
     (
-        "long lived tree of depth %d\t check: %d\n",
+        "long lived tree of depth %u\t check: %li\n",
         maxDepth,
         ItemCheck(longLivedTree)
     );

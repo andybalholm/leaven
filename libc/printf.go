@@ -2,8 +2,10 @@ package libc
 
 import (
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
+	"unicode"
 	"unsafe"
 )
 
@@ -126,5 +128,142 @@ func Puts(s *byte) int32 {
 	if err != nil {
 		return -1
 	}
+	return int32(n)
+}
+
+// fixScanfFormat converts a scanf format string from C-style to Go-style,
+// and makes needed changes to the other arguments as well.
+func fixScanfFormat(f *byte, args []any) string {
+	format := unsafe.Slice(f, Strlen(f))
+	var buf strings.Builder
+	narg := 0
+	start := 0
+	for i := 0; i < len(format); i++ {
+		if format[i] != '%' {
+			continue
+		}
+		buf.Write(format[start:i])
+		start = i
+		i++
+		if i < len(format) && format[i] == '%' {
+			buf.WriteByte('%')
+			buf.WriteByte('%')
+			start = i + 1
+			continue
+		}
+		for i < len(format) {
+			c := format[i]
+			switch c {
+			case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '#', '-', '.', ',', ' ', 'h', 'j', 'l':
+				i++
+				continue
+			}
+			break
+		}
+		if i >= len(format) {
+			// The format string ends with an invalid verb.
+			return string(format)
+		}
+		flags, verb := string(format[start:i]), format[i]
+		start = i + 1
+
+		allFlags := flags
+		_ = allFlags
+
+		flags = strings.Replace(flags, "h", "", -1)
+		flags = strings.Replace(flags, "j", "", -1)
+		flags = strings.Replace(flags, "l", "", -1)
+
+		if j := strings.Index(flags, "#0"); j >= 0 && verb == 'x' {
+			k := j + 2
+			for k < len(flags) && '0' <= flags[k] && flags[k] <= '9' {
+				k++
+			}
+			n, _ := strconv.Atoi(flags[j+2 : k])
+			flags = flags[:j+2] + fmt.Sprint(n-2) + flags[k:]
+		}
+
+		switch verb {
+		default:
+			buf.WriteString("%")
+			buf.WriteString(flags)
+			buf.WriteString(string(verb))
+
+		case 's':
+			if narg < len(args) {
+				switch a := args[narg].(type) {
+				case *byte:
+					args[narg] = &stringScanner{a}
+				}
+			}
+			buf.WriteString(flags)
+			buf.WriteString(string(verb))
+
+		case 'f', 'e', 'g', 'c', 'p':
+			// usual meanings
+			buf.WriteString(flags)
+			buf.WriteString(string(verb))
+
+		case 'x', 'X', 'o', 'd', 'b', 'i':
+			if verb == 'i' {
+				verb = 'v'
+			}
+			buf.WriteString(flags)
+			buf.WriteString(string(verb))
+
+		case 'u':
+			buf.WriteString(flags)
+			buf.WriteString("d")
+			if narg >= len(args) {
+				break
+			}
+			switch a := args[narg].(type) {
+			case *int16:
+				args[narg] = (*uint16)(unsafe.Pointer(a))
+			case *int32:
+				args[narg] = (*uint32)(unsafe.Pointer(a))
+			case *int64:
+				args[narg] = (*uint64)(unsafe.Pointer(a))
+			}
+		}
+
+		narg++
+	}
+	buf.Write(format[start:])
+
+	return buf.String()
+}
+
+type stringScanner struct {
+	b *byte
+}
+
+func (s *stringScanner) Scan(state fmt.ScanState, verb rune) error {
+	state.SkipSpace()
+	var result []rune
+	for {
+		c, _, err := state.ReadRune()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		if unicode.IsSpace(c) {
+			state.UnreadRune()
+			break
+		}
+		result = append(result, c)
+	}
+	str := string(result)
+	b := unsafe.Slice(s.b, len(str)+1)
+	copy(b, str)
+	b[len(b)-1] = 0
+	return nil
+}
+
+func Scanf(format *byte, args ...any) int32 {
+	f := fixScanfFormat(format, args)
+	n, _ := fmt.Scanf(f, args...)
 	return int32(n)
 }

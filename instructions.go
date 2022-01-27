@@ -142,8 +142,6 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			if len(args) == 1 {
 				return fmt.Sprintf("if _, err := os.Stdout.Write([]byte{byte(%s)}); err != nil { %s = -1 } else { %s = %s }", args[0], VariableName(inst), VariableName(inst), args[0]), nil
 			}
-		case "__sprintf_chk":
-			return fmt.Sprintf("%s = noarch.Snprintf(%s, %s)", VariableName(inst), args[0], strings.Join(args[2:], ", ")), nil
 		}
 		if types.Equal(inst.Type(), types.Void) {
 			return fmt.Sprintf("%s(%s)", callee, strings.Join(args, ", ")), nil
@@ -637,7 +635,7 @@ var libraryFunctions = map[string]string{
 	"__memset_chk":     "libc.MemsetChk",
 	"printf":           "libc.Printf",
 	"puts":             "libc.Puts",
-	"scanf":            "noarch.Scanf",
+	"scanf":            "libc.Scanf",
 	"__strcat_chk":     "libc.StrcatChk",
 	"strchr":           "libc.Strchr",
 	"strcmp":           "libc.Strcmp",

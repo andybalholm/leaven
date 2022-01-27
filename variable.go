@@ -342,8 +342,14 @@ func FormatUnsigned(v value.Value) (string, error) {
 		}
 	}
 
-	if t, ok := v.Type().(*types.IntType); ok && t.BitSize > 8 {
-		return fmt.Sprintf("uint%d(%s)", t.BitSize, result), nil
+	switch t := v.Type().(type) {
+	case *types.IntType:
+		if t.BitSize > 8 {
+			return fmt.Sprintf("uint%d(%s)", t.BitSize, result), nil
+		}
+	case *types.PointerType:
+		return fmt.Sprintf("uintptr(unsafe.Pointer(%s))", result), nil
 	}
+
 	return result, nil
 }

@@ -43,7 +43,7 @@ func GetElementPtr(elemType types.Type, src value.Value, indices []value.Value) 
 		if err != nil {
 			return "", fmt.Errorf("error translating first index (%v): %v", indices[0], err)
 		}
-		result = fmt.Sprintf("libc.AddPointer(%s, %s)", source, firstIndex)
+		result = fmt.Sprintf("libc.AddPointer(%s, int(%s))", source, firstIndex)
 	}
 	result = strings.TrimPrefix(result, "&")
 

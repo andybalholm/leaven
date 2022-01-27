@@ -59,3 +59,7 @@ func TestHelloWorldPuts(t *testing.T) {
 func TestBinaryTrees(t *testing.T) {
 	doTestCase(t, "binarytrees")
 }
+
+func TestFannkuch(t *testing.T) {
+	doTestCase(t, "fannkuch-redux")
+}

@@ -1,3 +1,5 @@
+#pragma once
+
 /* This header defines macros to enable variadic functions to be transpiled
  * with Leaven. It should be included instead of (or after) stdarg.h.
  */

@@ -96,7 +96,7 @@ void offset_momentum()
     vz[0] = -pz / solar_mass;
 }
 
-void initialize()
+void init()
 {
     x[0] = 0;
     y[0] = 0;
@@ -137,7 +137,7 @@ void initialize()
 int test_main()
 {
     int n = 5000000;
-    initialize();
+    init();
     offset_momentum();
     printf("%.9f\n", energy());
     advance(n);

@@ -22,7 +22,7 @@ func doTestCase(t *testing.T, progName string) {
 		t.Fatalf("Error running natively-compiled program: %v", err)
 	}
 
-	clang2 := exec.Command("clang", "-S", "-emit-llvm", "-fno-builtin", "-o", p+".ll", p+".c")
+	clang2 := exec.Command("clang", "-S", "-emit-llvm", "-fno-builtin", "-nostdinc", "-Iinclude", "-o", p+".ll", p+".c")
 	if err := clang2.Run(); err != nil {
 		t.Fatalf("Error compiling to LLVM: %v", err)
 	}
@@ -70,4 +70,8 @@ func TestNBody(t *testing.T) {
 
 func TestSpectralNorm(t *testing.T) {
 	doTestCase(t, "spectral-norm")
+}
+
+func TestMandelbrot(t *testing.T) {
+	doTestCase(t, "mandelbrot")
 }

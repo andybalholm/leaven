@@ -38,6 +38,10 @@ func main() {
 		if name == "" {
 			continue
 		}
+		if strings.Contains(name, ".") {
+			// It's a definition that's beeen replaced by a reference to a standard-library type.
+			continue
+		}
 
 		def, err := TypeDefinition(t)
 		if err != nil {
@@ -71,10 +75,12 @@ func main() {
 
 		fixMalloc(f)
 
-		if f.Name() == "main" {
+		name := VariableName(f)
+
+		if name == "main" {
 			fmt.Fprintln(out, "func main() {")
 		} else {
-			fmt.Fprintf(out, "func %s(", f.Name())
+			fmt.Fprintf(out, "func %s(", name)
 			for i, p := range f.Params {
 				if i > 0 {
 					fmt.Fprint(out, ", ")

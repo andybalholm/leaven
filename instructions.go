@@ -143,10 +143,6 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 			return fmt.Sprintf("%s = nil", VariableName(inst)), nil
 		case "llvm_stackrestore":
 			return ";", nil
-		case "putchar":
-			if len(args) == 1 {
-				return fmt.Sprintf("if _, err := os.Stdout.Write([]byte{byte(%s)}); err != nil { %s = -1 } else { %s = %s }", args[0], VariableName(inst), VariableName(inst), args[0]), nil
-			}
 		}
 		if types.Equal(inst.Type(), types.Void) {
 			return fmt.Sprintf("%s(%s)", callee, strings.Join(args, ", ")), nil
@@ -513,6 +509,20 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		return fmt.Sprintf("%s = %s(%s)", VariableName(inst), to, from), nil
 
+	case *ir.InstSRem:
+		x, err := FormatSigned(inst.X)
+		if err != nil {
+			return "", fmt.Errorf("error translating left operand (%v): %v", inst.X, err)
+		}
+		y, err := FormatSigned(inst.Y)
+		if err != nil {
+			return "", fmt.Errorf("error translating right operand (%v): %v", inst.Y, err)
+		}
+		if intType, ok := inst.Typ.(*types.IntType); ok && intType.BitSize == 8 {
+			return fmt.Sprintf("%s = byte(%s %% %s)", VariableName(inst), x, y), nil
+		}
+		return fmt.Sprintf("%s = %s %% %s", VariableName(inst), x, y), nil
+
 	case *ir.InstStore:
 		dest, err := FormatValue(inst.Dst)
 		if err != nil {
@@ -646,6 +656,8 @@ var libraryFunctions = map[string]string{
 	"memset_pattern16": "libc.MemsetPattern16",
 	"__memset_chk":     "libc.MemsetChk",
 	"printf":           "libc.Printf",
+	"putc":             "libc.Putc",
+	"putchar":          "libc.Putchar",
 	"puts":             "libc.Puts",
 	"scanf":            "libc.Scanf",
 	"sqrt":             "math.Sqrt",

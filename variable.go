@@ -45,16 +45,21 @@ func BlockName(v value.Value) string {
 
 var invalidNames = map[string]bool{
 	"return": true,
+	"init":   true,
 }
 
 // FormatValue formats a constant or variable as it should appear in an expression.
 func FormatValue(v value.Value) (string, error) {
 	switch v := v.(type) {
 	case *ir.Global:
+		name := VariableName(v)
 		if types.IsFunc(v.ContentType) {
-			return VariableName(v), nil
+			return name, nil
 		}
-		return "&" + VariableName(v), nil
+		if renamed, ok := libraryGlobals[name]; ok {
+			name = renamed
+		}
+		return "&" + name, nil
 
 	case value.Named:
 		return VariableName(v), nil
@@ -274,6 +279,12 @@ func FormatValue(v value.Value) (string, error) {
 	default:
 		return "", fmt.Errorf("unsupported type of value to translate: %T", v)
 	}
+}
+
+var libraryGlobals = map[string]string{
+	"stdin":  "os.Stdin",
+	"stdout": "os.Stdout",
+	"stderr": "os.Stderr",
 }
 
 // FormatSigned is like FormatValue, except that it converts "byte" to "int8".

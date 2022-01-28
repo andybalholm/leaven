@@ -116,7 +116,15 @@ func TypeName(t types.Type) string {
 		return ""
 	}
 
+	if renamed, ok := libraryTypes[name]; ok {
+		return renamed
+	}
+
 	return name
+}
+
+var libraryTypes = map[string]string{
+	"FILE": "os.File",
 }
 
 // compatiblePointerTypes returns whether casting t1 to t2 can be allowed without

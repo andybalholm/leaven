@@ -238,6 +238,13 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		}
 		return fmt.Sprintf("%s = %s * %s", VariableName(inst), x, y), nil
 
+	case *ir.InstFNeg:
+		x, err := FormatValue(inst.X)
+		if err != nil {
+			return "", fmt.Errorf("error translating operand (%v): %v", inst.X, err)
+		}
+		return fmt.Sprintf("%s = - %s", VariableName(inst), x), nil
+
 	case *ir.InstFPExt:
 		from, err := FormatValue(inst.From)
 		if err != nil {
@@ -636,6 +643,7 @@ var libraryFunctions = map[string]string{
 	"printf":           "libc.Printf",
 	"puts":             "libc.Puts",
 	"scanf":            "libc.Scanf",
+	"sqrt":             "math.Sqrt",
 	"__strcat_chk":     "libc.StrcatChk",
 	"strchr":           "libc.Strchr",
 	"strcmp":           "libc.Strcmp",

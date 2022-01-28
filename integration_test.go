@@ -22,7 +22,7 @@ func doTestCase(t *testing.T, progName string) {
 		t.Fatalf("Error running natively-compiled program: %v", err)
 	}
 
-	clang2 := exec.Command("clang", "-S", "-emit-llvm", "-o", p+".ll", p+".c")
+	clang2 := exec.Command("clang", "-S", "-emit-llvm", "-fno-builtin", "-o", p+".ll", p+".c")
 	if err := clang2.Run(); err != nil {
 		t.Fatalf("Error compiling to LLVM: %v", err)
 	}
@@ -62,4 +62,8 @@ func TestBinaryTrees(t *testing.T) {
 
 func TestFannkuch(t *testing.T) {
 	doTestCase(t, "fannkuch-redux")
+}
+
+func TestNBody(t *testing.T) {
+	doTestCase(t, "nbody")
 }

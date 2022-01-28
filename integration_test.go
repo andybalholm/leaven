@@ -67,3 +67,7 @@ func TestFannkuch(t *testing.T) {
 func TestNBody(t *testing.T) {
 	doTestCase(t, "nbody")
 }
+
+func TestSpectralNorm(t *testing.T) {
+	doTestCase(t, "spectral-norm")
+}

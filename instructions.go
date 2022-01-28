@@ -138,6 +138,11 @@ func TranslateInstruction(inst ir.Instruction) (string, error) {
 		case "llvm_objectsize_i64_p0i8":
 			// Use -1 for unknown size.
 			return fmt.Sprintf("%s = -1", VariableName(inst)), nil
+		case "llvm_stacksave":
+			// Use nil, since we're doing llvm_stackrestore as a no-op.
+			return fmt.Sprintf("%s = nil", VariableName(inst)), nil
+		case "llvm_stackrestore":
+			return ";", nil
 		case "putchar":
 			if len(args) == 1 {
 				return fmt.Sprintf("if _, err := os.Stdout.Write([]byte{byte(%s)}); err != nil { %s = -1 } else { %s = %s }", args[0], VariableName(inst), VariableName(inst), args[0]), nil

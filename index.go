@@ -56,14 +56,22 @@ func (i *Index) ReplaceValue(oldVal, newVal value.Value) {
 	delete(i.users, oldVal)
 }
 
-// deleteElement deletes the first element in s that is equal to v, and returns
-// the modified slice.
-func deleteElement[E comparable](s []E, v E) []E {
-	i := slices.Index(s, v)
-	if i == -1 {
-		return s
+func deleteInstruction(s []ir.Instruction, v ir.Instruction) []ir.Instruction {
+	for i, e := range s {
+		if e == v {
+			return slices.Delete(s, i, i+1)
+		}
 	}
-	return slices.Delete(s, i, i+1)
+	return s
+}
+
+func deleteUser(s []value.User, v value.User) []value.User {
+	for i, e := range s {
+		if e == v {
+			return slices.Delete(s, i, i+1)
+		}
+	}
+	return s
 }
 
 // DeleteInstruction deletes inst.
@@ -72,9 +80,9 @@ func (i *Index) DeleteInstruction(inst ir.Instruction) {
 	if b == nil {
 		return
 	}
-	b.Insts = deleteElement(b.Insts, inst)
+	b.Insts = deleteInstruction(b.Insts, inst)
 	for _, op := range inst.Operands() {
 		v := *op
-		i.users[v] = deleteElement[value.User](i.users[v], inst)
+		i.users[v] = deleteUser(i.users[v], inst)
 	}
 }

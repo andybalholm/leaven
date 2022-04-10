@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"sort"
@@ -30,7 +31,15 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer out.Close()
 
+	err = compile(out, m)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func compile(out io.Writer, m *ir.Module) error {
 	fmt.Fprint(out, "package main\n\n")
 
 	for _, t := range m.TypeDefs {
@@ -45,7 +54,7 @@ func main() {
 
 		def, err := TypeDefinition(t)
 		if err != nil {
-			log.Fatalf("Error generating type definition for %v: %v", t, err)
+			return fmt.Errorf("error generating type definition for %v: %v", t, err)
 		}
 
 		fmt.Fprintf(out, "type %s %s\n\n", name, def)
@@ -58,11 +67,11 @@ func main() {
 		}
 		t, err := TypeSpec(g.ContentType)
 		if err != nil {
-			log.Fatalf("Error translating type (%v): %v", g.ContentType, err)
+			return fmt.Errorf("error translating type (%v): %v", g.ContentType, err)
 		}
 		val, err := FormatValue(g.Init)
 		if err != nil {
-			log.Fatalf("Error translating initializer (%v): %v", g.Init, err)
+			return fmt.Errorf("error translating initializer (%v): %v", g.Init, err)
 		}
 		fmt.Fprintf(out, "var %s %s = %s\n\n", VariableName(g), t, val)
 	}
@@ -87,7 +96,7 @@ func main() {
 				}
 				pt, err := TypeSpec(p.Typ)
 				if err != nil {
-					log.Fatalf("Error translating type for parameter %d of %s: %v", i, f.Name(), err)
+					return fmt.Errorf("error translating type for parameter %d of %s: %v", i, f.Name(), err)
 				}
 				fmt.Fprintf(out, "%s %s", VariableName(p), pt)
 			}
@@ -102,7 +111,7 @@ func main() {
 			if !types.Equal(rt, types.Void) {
 				retType, err := TypeSpec(rt)
 				if err != nil {
-					log.Fatalf("Error translating return type for %s: %v", f.Name(), err)
+					return fmt.Errorf("error translating return type for %s: %v", f.Name(), err)
 				}
 				fmt.Fprintf(out, "%s ", retType)
 			}
@@ -120,7 +129,7 @@ func main() {
 					}
 					t, err := TypeSpec(inst.Type())
 					if err != nil {
-						log.Fatalf("Error translating type of %s in %s: %v", inst.Ident(), f.Name(), err)
+						return fmt.Errorf("error translating type of %s in %s: %v", inst.Ident(), f.Name(), err)
 					}
 					vars[t] = append(vars[t], VariableName(inst))
 					allVars = append(allVars, VariableName(inst))
@@ -159,7 +168,7 @@ func main() {
 				}
 				translated, err := TranslateInstruction(inst)
 				if err != nil {
-					log.Fatalf("Error translating %q: %v", inst.LLString(), err)
+					return fmt.Errorf("error translating %q: %v", inst.LLString(), err)
 				}
 				if translated != "" {
 					fmt.Fprintf(out, "\t%s\n", translated)
@@ -169,7 +178,7 @@ func main() {
 			case *ir.TermBr:
 				phis, err := PhiAssignments(b, term.Target)
 				if err != nil {
-					log.Fatalf("Error translating phi nodes: %v", err)
+					return fmt.Errorf("error translating phi nodes: %v", err)
 				}
 				if phis != "" {
 					fmt.Fprintf(out, "\t%s\n", phis)
@@ -179,12 +188,12 @@ func main() {
 			case *ir.TermCondBr:
 				cond, err := FormatValue(term.Cond)
 				if err != nil {
-					log.Fatalf("Error translating condition (%v): %v", term.Cond, err)
+					return fmt.Errorf("error translating condition (%v): %v", term.Cond, err)
 				}
 				fmt.Fprintf(out, "\tif %s {\n", cond)
 				phis, err := PhiAssignments(b, term.TargetTrue)
 				if err != nil {
-					log.Fatalf("Error translating phi nodes: %v", err)
+					return fmt.Errorf("error translating phi nodes: %v", err)
 				}
 				if phis != "" {
 					fmt.Fprintf(out, "\t\t%s\n", phis)
@@ -193,7 +202,7 @@ func main() {
 				fmt.Fprintln(out, "\t} else {")
 				phis, err = PhiAssignments(b, term.TargetFalse)
 				if err != nil {
-					log.Fatalf("Error translating phi nodes: %v", err)
+					return fmt.Errorf("error translating phi nodes: %v", err)
 				}
 				if phis != "" {
 					fmt.Fprintf(out, "\t\t%s\n", phis)
@@ -212,7 +221,7 @@ func main() {
 				}
 				retVal, err := FormatValue(term.X)
 				if err != nil {
-					log.Fatalf("Error translating return value (%v): %v", term.X, err)
+					return fmt.Errorf("error translating return value (%v): %v", term.X, err)
 				}
 				if f.Name() == "main" {
 					fmt.Fprintf(out, "\tos.Exit(int(%s))\n", retVal)
@@ -223,18 +232,18 @@ func main() {
 			case *ir.TermSwitch:
 				x, err := FormatValue(term.X)
 				if err != nil {
-					log.Fatalf("Error translating control value (%v): %v", term.X, err)
+					return fmt.Errorf("error translating control value (%v): %v", term.X, err)
 				}
 				fmt.Fprintf(out, "\tswitch %s {\n", x)
 				for _, c := range term.Cases {
 					x, err := FormatValue(c.X)
 					if err != nil {
-						log.Fatalf("Error translating case value (%v): %v", c.X, err)
+						return fmt.Errorf("error translating case value (%v): %v", c.X, err)
 					}
 					fmt.Fprintf(out, "\tcase %s:\n", x)
 					phis, err := PhiAssignments(b, c.Target)
 					if err != nil {
-						log.Fatalf("Error translating phi nodes: %v", err)
+						return fmt.Errorf("error translating phi nodes: %v", err)
 					}
 					if phis != "" {
 						fmt.Fprintf(out, "\t\t%s\n", phis)
@@ -244,7 +253,7 @@ func main() {
 				fmt.Fprint(out, "\tdefault:\n")
 				phis, err := PhiAssignments(b, term.TargetDefault)
 				if err != nil {
-					log.Fatalf("Error translating phi nodes: %v", err)
+					return fmt.Errorf("error translating phi nodes: %v", err)
 				}
 				if phis != "" {
 					fmt.Fprintf(out, "\t\t%s\n", phis)
@@ -253,12 +262,13 @@ func main() {
 				fmt.Fprint(out, "\t}\n")
 
 			default:
-				log.Fatalf("Unsupported block terminator type: %T", term)
+				return fmt.Errorf("unsupported block terminator type: %T", term)
 			}
 		}
 
 		fmt.Fprint(out, "}\n\n")
 	}
+	return nil
 }
 
 // PhiAssignments returns an assignment statement expressing the effects of Phi

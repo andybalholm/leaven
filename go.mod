@@ -3,8 +3,9 @@ module github.com/andybalholm/leaven
 go 1.18
 
 require (
+	github.com/elliotchance/c2go v0.26.10
 	github.com/llir/llvm v0.3.5-0.20220120022543-ad080cea55b7
-	golang.org/x/exp v0.0.0-20220121174013-7b334a16533f
+	golang.org/x/exp v0.0.0-20220407100705-7b9b53b0aca4
 )
 
 require (
